@@ -1,0 +1,55 @@
+package com.roncoo.education.system.feign.interfaces.config;
+
+import com.roncoo.education.common.cache.CacheRedis;
+import com.roncoo.education.common.core.base.Constants;
+import com.roncoo.education.common.core.base.Result;
+import com.roncoo.education.common.core.enums.ResultEnum;
+import com.roncoo.education.common.log.SysLogCache;
+import com.roncoo.education.common.tools.ObjMapUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 系统日志，切面处理类
+ */
+@Aspect
+@Component
+@RequiredArgsConstructor
+public class AspectSysLogCache {
+
+    @NotNull
+    private final CacheRedis cacheRedis;
+
+    @Pointcut("@annotation(com.roncoo.education.common.log.SysLogCache)")
+    public void cacheLogPointCut() {
+
+    }
+
+    @AfterReturning(value = "cacheLogPointCut()", returning = "obj")
+    public void doAfterReturning(JoinPoint joinPoint, Object obj) {
+        Result<?> result = (Result<?>) obj;
+        if (result.getCode().equals(ResultEnum.SUCCESS.getCode())) {
+            Map<String, Object> map = ObjMapUtil.obj2Map(result.getData());
+            if (map.get("id") != null) {
+                MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+                SysLogCache sysLogCache = signature.getMethod().getAnnotation(SysLogCache.class);
+                HttpServletRequest request = ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
+                cacheRedis.set(sysLogCache.key() + request.getHeader(Constants.USER_ID) + map.get("id").toString(), map, 60, TimeUnit.MINUTES);
+            }
+        }
+    }
+
+}

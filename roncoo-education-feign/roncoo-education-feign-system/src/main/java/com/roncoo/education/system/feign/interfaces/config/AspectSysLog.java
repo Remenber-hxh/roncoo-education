@@ -1,0 +1,114 @@
+package com.roncoo.education.system.feign.interfaces.config;
+
+import cn.hutool.core.thread.ExecutorBuilder;
+import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.http.useragent.UserAgent;
+import cn.hutool.http.useragent.UserAgentUtil;
+import com.roncoo.education.common.log.SysLog;
+import com.roncoo.education.common.cache.CacheRedis;
+import com.roncoo.education.common.core.base.Constants;
+import com.roncoo.education.common.tools.IpUtil;
+import com.roncoo.education.common.tools.JsonUtil;
+import com.roncoo.education.common.tools.ObjMapUtil;
+import com.roncoo.education.system.feign.interfaces.IFeignSysLog;
+import com.roncoo.education.system.feign.interfaces.qo.FeignSysLogQO;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+
+/**
+ * 系统日志，切面处理类
+ */
+@Slf4j
+@Aspect
+@Component
+@RequiredArgsConstructor
+public class AspectSysLog {
+    /**
+     * 核心进程1个
+     * 最大线程池100个
+     * 队列100个
+     */
+    private static final ExecutorService CALLBACK_EXECUTOR = ExecutorBuilder.create().setCorePoolSize(1).setMaxPoolSize(100).setWorkQueue(new LinkedBlockingQueue<>(100)).build();
+
+    /**
+     * 记录最大程度
+     */
+    private static final int MAX_LENGTH = 5000;
+
+    @NotNull
+    private final CacheRedis cacheRedis;
+    @NotNull
+    private final IFeignSysLog feignSysLog;
+
+    @Pointcut("@annotation(com.roncoo.education.common.log.SysLog)")
+    public void logPointCut() {
+    }
+
+    @Before("logPointCut()")
+    public void saveSysLog(JoinPoint joinPoint) {
+        try {
+            FeignSysLogQO qo = getSysLog();
+            // 记录日志，异步执行
+            CALLBACK_EXECUTOR.execute(() -> {
+                MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+                SysLog syslog = signature.getMethod().getAnnotation(SysLog.class);
+                qo.setOperation(syslog.value());
+                qo.setContent(joinPoint.getArgs() != null && joinPoint.getArgs().length > 0 ? JsonUtil.toJsonString(joinPoint.getArgs()) : "");
+                if (StringUtils.hasText(qo.getContent())) {
+                    if (syslog.isUpdate()) {
+                        // 如果是修改或者编辑，比对变化
+
+                        // 修改后的值
+                        Map<String, Object> map1 = JsonUtil.parseArray(qo.getContent(), Map.class).get(0);
+                        String redisKey = syslog.key() + qo.getUserId() + map1.get("id").toString();
+                        if (cacheRedis.hasKey(redisKey)) {
+                            // 修改前的值
+                            Map<String, Object> map2 = cacheRedis.get(redisKey, Map.class);
+                            // 删除缓存
+                            cacheRedis.delete(redisKey);
+                            qo.setContent(ObjMapUtil.contrast(map1, map2)); //进行对比
+                        }
+                    }
+                    if (qo.getContent().length() > MAX_LENGTH) {
+                        log.warn("操作日志：{}", JsonUtil.toJsonString(qo));
+                        qo.setContent(qo.getContent().substring(0, MAX_LENGTH));
+                    }
+                }
+                feignSysLog.save(qo);
+            });
+        } catch (Exception e) {
+            log.error("保存操作日志异常", e);
+        }
+    }
+
+    private FeignSysLogQO getSysLog() {
+        FeignSysLogQO qo = new FeignSysLogQO();
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        qo.setPath(request.getServletPath());
+        qo.setMethod(request.getMethod());
+        qo.setLoginIp(IpUtil.getIpAddress(request));
+        qo.setUserId(Long.valueOf(request.getHeader(Constants.USER_ID)));
+        UserAgent userAgent = UserAgentUtil.parse(request.getHeader("User-Agent"));
+        if (ObjectUtil.isNotNull(userAgent)) {
+            qo.setBrowser(userAgent.getBrowser().toString());
+            qo.setOs(userAgent.getPlatform().toString());
+        }
+        return qo;
+    }
+
+}

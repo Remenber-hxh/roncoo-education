@@ -1,0 +1,106 @@
+package com.roncoo.education.course.dao.impl;
+
+import com.roncoo.education.common.base.page.Page;
+import com.roncoo.education.common.base.page.PageUtil;
+import com.roncoo.education.common.tools.IdWorker;
+import com.roncoo.education.common.base.AbstractBaseJdbc;
+import com.roncoo.education.course.dao.CourseChapterDao;
+import com.roncoo.education.course.dao.impl.mapper.CourseChapterMapper;
+import com.roncoo.education.course.dao.impl.mapper.entity.CourseChapter;
+import com.roncoo.education.course.dao.impl.mapper.entity.CourseChapterExample;
+import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.namedparam.SqlParameterSourceUtils;
+import org.springframework.stereotype.Repository;
+
+import jakarta.validation.constraints.NotNull;
+
+import java.util.List;
+
+/**
+ * 章节信息 服务实现类
+ *
+ * @author wujing
+ * @date 2022-08-25
+ */
+@Repository
+@RequiredArgsConstructor
+public class CourseChapterDaoImpl extends AbstractBaseJdbc implements CourseChapterDao {
+
+    @NotNull
+    private final CourseChapterMapper mapper;
+
+    @Override
+    public int save(CourseChapter record) {
+        if (record.getId() == null) {
+            record.setId(IdWorker.getId());
+        }
+        return this.mapper.insertSelective(record);
+    }
+
+    @Override
+    public int deleteById(Long id) {
+        return this.mapper.deleteByPrimaryKey(id);
+    }
+
+    @Override
+    public int updateById(CourseChapter record) {
+        record.setGmtCreate(null);
+        record.setGmtModified(null);
+        return this.mapper.updateByPrimaryKeySelective(record);
+    }
+
+    @Override
+    public CourseChapter getById(Long id) {
+        return this.mapper.selectByPrimaryKey(id);
+    }
+
+    @Override
+    public Page<CourseChapter> page(int pageCurrent, int pageSize, CourseChapterExample example) {
+        int count = this.mapper.countByExample(example);
+        pageSize = PageUtil.checkPageSize(pageSize);
+        pageCurrent = PageUtil.checkPageCurrent(count, pageSize, pageCurrent);
+        int totalPage = PageUtil.countTotalPage(count, pageSize);
+        example.setLimitStart(PageUtil.countOffset(pageCurrent, pageSize));
+        example.setPageSize(pageSize);
+        return new Page<>(count, totalPage, pageCurrent, pageSize, this.mapper.selectByExample(example));
+    }
+
+    @Override
+    public List<CourseChapter> listByExample(CourseChapterExample example) {
+        return this.mapper.selectByExample(example);
+    }
+
+    @Override
+    public int countByExample(CourseChapterExample example) {
+        return this.mapper.countByExample(example);
+    }
+
+    @Override
+    public List<CourseChapter> listByCourseId(Long courseId) {
+        CourseChapterExample example = new CourseChapterExample();
+        example.createCriteria().andCourseIdEqualTo(courseId);
+        example.setOrderByClause(" sort asc, id desc ");
+        return this.mapper.selectByExample(example);
+    }
+
+    @Override
+    public List<CourseChapter> listByCourseIdAndStatusId(Long courseId, Integer statusId) {
+        CourseChapterExample example = new CourseChapterExample();
+        example.createCriteria().andCourseIdEqualTo(courseId).andStatusIdEqualTo(statusId);
+        example.setOrderByClause(" sort asc, id desc ");
+        return this.mapper.selectByExample(example);
+    }
+
+    @Override
+    public int deleteByCourseId(Long courseId) {
+        CourseChapterExample example = new CourseChapterExample();
+        example.createCriteria().andCourseIdEqualTo(courseId);
+        return this.mapper.deleteByExample(example);
+    }
+
+    @Override
+    public int updateSortForBatch(List<CourseChapter> chapterList) {
+        String sql = "update course_chapter set sort = :sort where id = :id";
+        return namedParameterJdbcTemplate.batchUpdate(sql, SqlParameterSourceUtils.createBatch(chapterList)).length;
+    }
+}
