@@ -85,6 +85,10 @@ public class AdminGlobalFilter implements GlobalFilter, Ordered {
         ServerWebExchange mutatedExchange = exchange.mutate().request(mutatedRequest).build();
 
         if (FilterUtil.checkUri(uri, FilterUtil.ADMIN_URL_PREFIX)) {
+            // 二开：超级管理员(userId=1)直通，不做菜单API权限校验；其他账号仍按角色权限拦截
+            if (userId == 1L) {
+                return chain.filter(mutatedExchange);
+            }
             // admin校验
             if (!stringRedisTemplate.hasKey(Constants.RedisPre.ADMIN_APIS.concat(userId.toString()))) {
                 throw new BaseException(ResultEnum.MENU_PAST);
