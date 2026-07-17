@@ -33,9 +33,9 @@ public interface ExamRecordMapper {
     @Select("select * from exam_record where user_id=#{userId} and paper_id=#{paperId} and exam_status=1 order by id desc limit 1")
     ExamRecord getOngoing(@Param("userId") Long userId, @Param("paperId") Long paperId);
 
-    /** 我的成绩列表(不含大字段) */
-    @Select("select id, gmt_create, gmt_modified, status_id, user_id, paper_id, course_id, attempt_no, start_time, submit_time, score, is_pass, exam_status "
-            + "from exam_record where user_id=#{userId} order by id desc limit 100")
+    /** 我的成绩列表(不含大字段, 联表带试卷名) */
+    @Select("select r.id, r.gmt_create, r.gmt_modified, r.status_id, r.user_id, r.paper_id, r.course_id, r.attempt_no, r.start_time, r.submit_time, r.score, r.is_pass, r.exam_status, p.paper_name "
+            + "from exam_record r left join exam_paper p on r.paper_id = p.id where r.user_id=#{userId} order by r.id desc limit 100")
     List<ExamRecord> listByUserId(@Param("userId") Long userId);
 
     @Select("<script>select id, gmt_create, gmt_modified, status_id, user_id, paper_id, course_id, attempt_no, start_time, submit_time, score, is_pass, exam_status from exam_record <where>"

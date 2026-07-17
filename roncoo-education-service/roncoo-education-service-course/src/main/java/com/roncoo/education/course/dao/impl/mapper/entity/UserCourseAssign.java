@@ -27,4 +27,6 @@ public class UserCourseAssign implements Serializable {
     /** 0未开始 1学习中 2已学完 3已通过考试 */
     private Integer finishStatus;
     private Date finishTime;
+    /** 联表查询字段：课程名称 */
+    private String courseName;
 }

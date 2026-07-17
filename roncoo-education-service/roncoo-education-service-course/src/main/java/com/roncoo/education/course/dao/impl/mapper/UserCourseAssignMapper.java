@@ -21,7 +21,8 @@ public interface UserCourseAssignMapper {
     @Select("select * from user_course_assign where user_id=#{userId} and course_id=#{courseId}")
     UserCourseAssign getByUserAndCourse(@Param("userId") Long userId, @Param("courseId") Long courseId);
 
-    @Select("select * from user_course_assign where user_id=#{userId} and status_id=1 order by assign_type, id desc")
+    @Select("select a.*, c.course_name from user_course_assign a left join course c on a.course_id = c.id "
+            + "where a.user_id=#{userId} and a.status_id=1 order by a.assign_type, a.id desc")
     List<UserCourseAssign> listByUserId(@Param("userId") Long userId);
 
     @Update("update user_course_assign set finish_status=#{finishStatus}, finish_time=now() where user_id=#{userId} and course_id=#{courseId}")

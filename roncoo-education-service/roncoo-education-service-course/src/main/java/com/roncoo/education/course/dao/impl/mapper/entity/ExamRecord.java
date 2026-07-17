@@ -34,4 +34,6 @@ public class ExamRecord implements Serializable {
     private String questionsJson;
     /** 作答快照 */
     private String answersJson;
+    /** 联表查询字段：试卷名称 */
+    private String paperName;
 }
