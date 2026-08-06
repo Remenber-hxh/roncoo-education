@@ -27,9 +27,9 @@ public enum SmsPlatformEnum {
     HUAWEI_YUN(4, "华为云(待接入)", "huawei%", "huaweiSms"),
 
     /**
-     * 领课云
+     * 私有云
      */
-    LK_YUN(1, "领课云", "lkyun%", "lkyunSms");
+    LK_YUN(1, "私有云", "lkyun%", "lkyunSms");
 
     /**
      * 编码

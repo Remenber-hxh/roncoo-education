@@ -34,7 +34,7 @@ public class LkyunSmsImpl implements SmsFace {
     }
 
     /**
-     * 领课云
+     * 私有云
      *
      * @param phone
      * @param templateParam

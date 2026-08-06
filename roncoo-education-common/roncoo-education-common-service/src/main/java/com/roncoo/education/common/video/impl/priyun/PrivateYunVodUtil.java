@@ -1,6 +1,3 @@
-/**
- * Copyright 2015-现在 广州市领课网络科技有限公司
- */
 package com.roncoo.education.common.video.impl.priyun;
 
 import cn.hutool.core.util.StrUtil;
@@ -20,7 +17,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 /**
- * 领课云点播工具类
+ * 私有云点播工具类
  *
  * @author wujing
  */
@@ -38,9 +35,9 @@ public final class PrivateYunVodUtil {
     /**
      * 查询视频云信息
      *
-     * @param url         点播领课云域名路径
-     * @param accessKeyId 领课云配置accessKeyId
-     * @param secretKey   领课云配置accessKeyIdsecretKey
+     * @param url         点播私有云域名路径
+     * @param accessKeyId 私有云配置accessKeyId
+     * @param secretKey   私有云配置accessKeyIdsecretKey
      * @return
      */
     public static PrivateYunInfoResp getInfo(String url, String accessKeyId, String secretKey) {
@@ -58,7 +55,7 @@ public final class PrivateYunVodUtil {
             return JSONUtil.toBean(resultJson.getStr("data"), PrivateYunInfoResp.class);
         }
 
-        log.error("领课云--查询账号信息失败：{}", result);
+        log.error("私有云--查询账号信息失败：{}", result);
         return null;
     }
 
@@ -80,9 +77,9 @@ public final class PrivateYunVodUtil {
     /**
      * 查询视频信息
      *
-     * @param url         点播领课云域名路径
-     * @param accessKeyId 领课云配置accessKeyId
-     * @param secretKey   领课云配置accessKeyIdsecretKey
+     * @param url         点播私有云域名路径
+     * @param accessKeyId 私有云配置accessKeyId
+     * @param secretKey   私有云配置accessKeyIdsecretKey
      * @param videoVid    视频vid
      * @param state       自定义字段（企业ID）
      * @return
@@ -104,16 +101,16 @@ public final class PrivateYunVodUtil {
             return JSONUtil.toBean(resultJson.getStr("data"), PrivateYunVideoInfoResp.class);
         }
 
-        log.error("领课云--查询视频信息失败：{}", result);
+        log.error("私有云--查询视频信息失败：{}", result);
         return null;
     }
 
     /**
      * 删除视频
      *
-     * @param url         点播领课云域名路径
-     * @param accessKeyId 领课云配置accessKeyId
-     * @param secretKey   领课云配置accessKeyIdsecretKey
+     * @param url         点播私有云域名路径
+     * @param accessKeyId 私有云配置accessKeyId
+     * @param secretKey   私有云配置accessKeyIdsecretKey
      * @param videoVid    视频vid
      * @param state       自定义字段（企业ID）
      * @return
@@ -135,7 +132,7 @@ public final class PrivateYunVodUtil {
             return resultJson.getStr("msg");
         }
 
-        log.error("领课云--删除视频响应结果失败：{}", result);
+        log.error("私有云--删除视频响应结果失败：{}", result);
         return resultJson.getStr("data");
     }
 
@@ -143,10 +140,10 @@ public final class PrivateYunVodUtil {
     /**
      * token接口
      *
-     * @param url         点播领课云域名路径
+     * @param url         点播私有云域名路径
      * @param authUrl     授权地址，请求播放时调用该接口
-     * @param accessKeyId 领课云配置accessKeyId
-     * @param secretKey   领课云配置accessKeyIdsecretKey
+     * @param accessKeyId 私有云配置accessKeyId
+     * @param secretKey   私有云配置accessKeyIdsecretKey
      * @param videoVid    视频vid
      * @param state       自定义字段（企业ID）
      * @param expires     过期时间，单位：S（默认0，不过期）
@@ -173,7 +170,7 @@ public final class PrivateYunVodUtil {
             return JSONUtil.toBean(resultJson.getStr("data"), PrivateYunPlayTokenRes.class);
         }
 
-        log.error("领课云--获取token响应结果：{}", result);
+        log.error("私有云--获取token响应结果：{}", result);
         return null;
     }
 

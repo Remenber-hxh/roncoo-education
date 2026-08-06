@@ -9,26 +9,7 @@
     <packaging>pom</packaging>
 
     <name>roncoo-education</name>
-    <description>领课教育-分布式在线教育开源系统</description>
-    <url>http://www.roncoo.net</url>
-
-    <organization>
-        <name>LingKe, Co., Ltd.</name>
-        <url>http://www.roncoo.net</url>
-    </organization>
-
-    <developers>
-        <developer>
-            <name>fengyw</name>
-            <email>fengyw@roncoo.com</email>
-            <organization>LingKe, Co., Ltd.</organization>
-            <organizationUrl>http://www.roncoo.net</organizationUrl>
-            <roles>
-                <role>developer</role>
-            </roles>
-            <timezone>+8</timezone>
-        </developer>
-    </developers>
+    <description>内部培训平台-员工培训与在线考试系统</description>
 
     <properties>
         <java.version>17</java.version>

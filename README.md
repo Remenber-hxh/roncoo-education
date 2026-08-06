@@ -1,70 +1,44 @@
-<div>
-    <img src="distribution/images/logo.jpg" alt="领课教育系统-开源版"/>
-    <div>
-        <a href="http://spring.io/projects/spring-boot">
-            <img src="https://img.shields.io/badge/spring--boot-3.5.0-blue.svg" alt="spring-boot">
-        </a>
-        <a href="https://spring.io/projects/spring-cloud-alibaba">
-            <img src="https://img.shields.io/badge/spring--cloud--alibaba-2025.0.0.0-blue.svg" alt="spring-cloud-alibaba">
-        </a> 
-        <a href="https://cn.vuejs.org/">
-            <img src="https://img.shields.io/badge/vue-3.5.20-blue.svg" alt="vue">
-        </a> 
-        <a href="https://element-plus.org/">
-            <img src="https://img.shields.io/badge/element--plus-2.11.3-blue.svg" alt="element-plus">
-        </a> 
-        <a href="https://nuxt.com/">
-            <img src="https://img.shields.io/badge/nuxt-3.17.2-blue.svg" alt="nuxt">
-        </a> 
-    </div>
-</div>
+# 内部培训平台 - 后端服务
 
-### 使用须知
+公司内部员工培训学习平台的后端，基于 Spring Cloud Alibaba 的微服务架构。
 
-1. 可以用于个人学习、毕业设计、教学案例、公益事业等。
-2. 商用限制，若要商用请咨询：18302045627（微信可加）。
-3. 禁止将本项目的相关代码和相关资料进行任何形式任何名义的出售。
+### 技术栈
 
-### 项目介绍
+Spring Boot 3.5 + Spring Cloud Alibaba 2025 + MySQL 8 + Redis + MyBatis + Druid，JDK 17。
 
-领课教育系统（roncoo-education）是基于领课网络多年的在线教育平台开发和运营经验打造出来的产品，致力于打造一个各行业都适用的分布式在线教育系统。系统采用前后端分离模式，前台采用vue.js为核心框架，后台采用Spring Cloud为核心框架。系统目前主要功能有课程点播功能，支持多家视频云的接入，课程附件管理功能，支持多家存储云的接入，可以帮助个人或者企业快速搭建一个轻量级的在线教育平台。
+### 服务与端口
 
-目前集成AI写作能力，采用流式输出技术，实时生成课程简介、教学大纲等专业教育内容，显著提升课程内容生产效率和质量，我们会陆续添加更多AI能力，请持续关注。
+| 模块 | 端口 | 说明 |
+| --- | --- | --- |
+| roncoo-education-gateway | 7700 | 网关，统一入口、鉴权、接口级权限拦截 |
+| roncoo-education-service-system | 7710 | 系统服务：登录、菜单、角色、系统配置 |
+| roncoo-education-service-user | 7720 | 用户服务：员工账号、学习记录 |
+| roncoo-education-service-course | 7730 | 课程服务：分类、课程、章节，以及考试模块 |
 
-<img src="distribution/images/ai.gif"/>
+前端另有两个仓库：管理后台（Vue3，9528）、员工门户（Nuxt3，3000）。
 
-<table>
-  <tr>
-    <td><img src="distribution/images/web1.png"/></td>
-    <td><img src="distribution/images/web2.png"/></td>
-  </tr>
-  <tr>
-    <td><img src="distribution/images/web3.png"/></td>
-    <td><img src="distribution/images/web4.png"/></td>
-  </tr>
-  <tr>
-    <td><img src="distribution/images/admin1.png"/></td>
-    <td><img src="distribution/images/admin2.png"/></td>
-  </tr>
-  <tr>
-    <td><img src="distribution/images/admin3.png"/></td>
-    <td><img src="distribution/images/admin4.png"/></td>
-  </tr>
-</table>
+### 本地运行
 
-### 演示地址
+见 [LOCAL_RUN.md](LOCAL_RUN.md)。本地已绕过 Nacos / Seata，配置直接落在 `application-dev.properties`。
 
-* 门户系统：[https://eduos.roncoos.com/](https://eduos.roncoos.com/)
-* 管理系统：[https://eduos.roncoos.com/admin/](https://eduos.roncoos.com/admin/)
-* 前端技术体系：Vue3 + Nuxt3 + Vite8 + Vue-Router + Element-Plus + Pinia + Axios
-* 后端技术体系：Spring Cloud Alibaba2025 + MySQL8 + Nacos + Seata + Mybatis + Druid
+### 数据库
 
-### 源码地址
+`db/` 目录下：
 
-* 后端系统：roncoo-education（核心框架：Spring Cloud Alibaba）：[码云](https://gitee.com/roncoocom/roncoo-education) | [Github](https://github.com/roncoo/roncoo-education) | [Gitcode](https://gitcode.com/roncoocom/roncoo-education)
-* 门户系统：roncoo-education-web（核心框架：Nuxt3）：[码云](https://gitee.com/roncoocom/roncoo-education-web) | [Github](https://github.com/roncoo/roncoo-education-web) | [Gitcode](https://gitcode.com/roncoocom/roncoo-education-web)
-* 管理系统：roncoo-education-admin（核心框架：Vue3）：[码云](https://gitee.com/roncoocom/roncoo-education-admin) | [Github](https://github.com/roncoo/roncoo-education-admin) | [Gitcode](https://gitcode.com/roncoocom/roncoo-education-admin)
+| 文件 | 说明 |
+| --- | --- |
+| schema_rebuild.sql | 全部建表语句（由 `gen_schema.js` 从 Mapper XML 反向生成） |
+| seed_admin.sql | 管理员账号与 RSA 登录密钥 |
+| seed_config.sql | 站点配置 |
+| seed_menu.sql / seed_menu_exam.sql | 后台菜单与权限 |
+| seed_demo.sql / seed_homepage.sql | 演示课程与门户首页数据 |
+| exam_schema.sql | 考试模块 5 张表 |
+| update_admin_account.sql | 管理员账号变更 |
 
----
-<div>关注微信公众号可获取更多学习资料（SQL脚本、部署教程、常见问题等）</div>
-<img src="distribution/images/gzh.png" alt="领课开源-微信公众号" width="600"/>
+### 考试模块
+
+课程服务下的 `exam` 包，为二开新增：题库、试卷与组卷规则、课程指派、随机抽题、自动评分、补考。设计文档见项目根目录的《考试补考模块设计（二开）》。
+
+### 开源声明
+
+本项目基于开源项目 roncoo-education 二次开发，遵循 AGPL v3 许可证。

@@ -29,9 +29,9 @@ public enum LivePlatformEnum {
     BOKECC(4, "获得场景(待实现)", "liveBokecc%");
 
     /**
-     * 领课云，只支持点播，暂不支持直播
+     * 私有云，只支持点播，暂不支持直播
      */
-    // PRIVATEY(1, "领课云", "livePriy%");
+    // PRIVATEY(1, "私有云", "livePriy%");
 
     /**
      * 编码
