@@ -77,9 +77,12 @@ public class SysUserCommonBiz {
 
     /**
      * 菜单层级处理
+     * <p>
+     * is_show=false 的菜单不进侧边栏，但仍保留在 routerList 中，
+     * 用于「用户记录」「学习记录」这类必须带参数、只能从列表页按钮进入的详情页。
      */
     private List<AdminSysMenuUserResp> filters(Long parentId, List<SysMenu> menuList) {
-        List<SysMenu> sysMenuList = menuList.stream().filter(item -> parentId.compareTo(item.getParentId()) == 0 && !item.getMenuType().equals(MenuTypeEnum.PERMISSION.getCode())).collect(Collectors.toList());
+        List<SysMenu> sysMenuList = menuList.stream().filter(item -> parentId.compareTo(item.getParentId()) == 0 && !item.getMenuType().equals(MenuTypeEnum.PERMISSION.getCode()) && !Boolean.FALSE.equals(item.getIsShow())).collect(Collectors.toList());
         if (CollectionUtil.isNotEmpty(sysMenuList)) {
             List<AdminSysMenuUserResp> respList = BeanUtil.copyProperties(sysMenuList, AdminSysMenuUserResp.class);
             for (AdminSysMenuUserResp resp : respList) {
