@@ -12,6 +12,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
@@ -48,6 +49,40 @@ public class UploadCommonBiz {
             return Result.error("暂不支持该类型");
         }
         String fileUrl = uploadFace.uploadPic(picFile, upload);
+        return Result.success(fileUrl);
+    }
+
+    /**
+     * 音视频上传到本地存储（二开新增）
+     * <p>
+     * roncoo 原本的音视频是浏览器直传第三方点播云（保利威等），不经过服务端。
+     * 选择本地存储后没有第三方云可传，改为传到服务端落盘，
+     * 返回的地址直接作为播放地址（见 AuthCourseBiz.localPlayConfig）。
+     *
+     * @return 视频文件的访问地址
+     */
+    public Result<String> uploadVideo(MultipartFile videoFile) {
+        if (ObjectUtil.isEmpty(videoFile) || videoFile.isEmpty()) {
+            return Result.error("请选择文件");
+        }
+
+        Upload upload = sysConfigCommonBiz.getSysConfig(Upload.class);
+        if (ObjectUtil.isEmpty(upload) || ObjectUtil.isEmpty(upload.getStoragePlatform())) {
+            return Result.error("上传参数没配置");
+        }
+        if (!StoragePlatformEnum.LOCAL.getCode().equals(upload.getStoragePlatform())) {
+            return Result.error("该接口仅用于本地存储，当前存储平台不是本地存储");
+        }
+
+        UploadFace uploadFace = uploadFaceMap.get(StoragePlatformEnum.LOCAL.getMode());
+        if (ObjectUtil.isEmpty(uploadFace)) {
+            return Result.error("暂不支持该类型");
+        }
+        // 视频需要能被播放器直接访问，走公共读目录
+        String fileUrl = uploadFace.uploadDoc(videoFile, upload, true);
+        if (!StringUtils.hasText(fileUrl)) {
+            return Result.error("上传失败，请查看服务端日志");
+        }
         return Result.success(fileUrl);
     }
 

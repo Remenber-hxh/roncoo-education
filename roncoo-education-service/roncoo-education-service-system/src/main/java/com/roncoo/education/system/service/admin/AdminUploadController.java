@@ -49,6 +49,14 @@ public class AdminUploadController extends BaseController {
         return biz.uploadDoc(docFile, false);
     }
 
+    @Operation(summary = "上传音视频", description = "二开新增。仅在存储平台为「本地存储」时可用，视频落盘到服务器本地，返回可直接播放的地址")
+    @Parameter(name = "videoFile", description = "音视频文件", required = true)
+    @SysLog(value = "上传音视频")
+    @PostMapping(value = "/video")
+    public Result<String> uploadVideo(@RequestParam(name = "videoFile", required = false) MultipartFile videoFile) {
+        return biz.uploadVideo(videoFile);
+    }
+
     @Operation(summary = "上传app", description = "服务端上传app接口，该接口只支持app格式")
     @Parameter(name = "appFile", description = "app文件", required = true)
     @SysLog(value = "上传app")

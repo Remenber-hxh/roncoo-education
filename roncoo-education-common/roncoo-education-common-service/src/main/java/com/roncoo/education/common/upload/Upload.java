@@ -17,6 +17,14 @@ public class Upload implements Serializable {
     private static final long serialVersionUID = 1195869049655301491L;
 
     /**
+     * 本地存储
+     * localStoragePath   文件落盘的根目录，如 D:/视频培训/uploads
+     * localStorageDomain 对外访问前缀，如 http://localhost:7700/system/images
+     */
+    private String localStoragePath;
+    private String localStorageDomain;
+
+    /**
      * MinIO
      */
     private String minioEndpoint;

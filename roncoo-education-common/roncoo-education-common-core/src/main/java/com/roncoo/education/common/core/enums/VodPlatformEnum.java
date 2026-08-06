@@ -31,7 +31,16 @@ public enum VodPlatformEnum {
     /**
      * 私有云（自建点播服务，需另行部署）
      */
-    PRIVATEY(1, "私有云", "priy%");
+    PRIVATEY(1, "私有云", "priy%"),
+
+    /**
+     * 本地存储（二开新增）
+     * <p>
+     * 视频不走第三方点播云，直接存在服务器本地磁盘，
+     * 播放时由后端下发文件地址，前端用原生 video 播放。
+     * 配套：LocalUploadImpl 落盘、LocalFileController 读取。
+     */
+    LOCAL(5, "本地存储", "local%");
 
     /**
      * 编码

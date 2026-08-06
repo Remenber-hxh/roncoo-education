@@ -8,6 +8,8 @@ import com.roncoo.education.common.base.page.PageUtil;
 import com.roncoo.education.common.core.base.Result;
 import com.roncoo.education.common.core.enums.ResourceTypeEnum;
 import com.roncoo.education.common.core.enums.ResultEnum;
+import com.roncoo.education.common.core.enums.VideoStatusEnum;
+import com.roncoo.education.common.core.enums.VodPlatformEnum;
 import com.roncoo.education.common.base.BaseBiz;
 import com.roncoo.education.common.tools.BeanUtil;
 import com.roncoo.education.common.tools.IpUtil;
@@ -120,7 +122,12 @@ public class AdminResourceBiz extends BaseBiz {
         Resource record = BeanUtil.copyProperties(req, Resource.class);
         if (ResourceTypeEnum.VIDEO.getCode().equals(req.getResourceType()) || ResourceTypeEnum.AUDIO.getCode().equals(req.getResourceType())) {
             // 视频类型，填写视频平台
-            record.setVodPlatform(feignSysConfig.getVideo().getVodPlatform());
+            Integer vodPlatform = feignSysConfig.getVideo().getVodPlatform();
+            record.setVodPlatform(vodPlatform);
+            if (VodPlatformEnum.LOCAL.getCode().equals(vodPlatform)) {
+                // 本地存储没有转码流程，落盘即可用，直接置为成功，否则资源列表一直显示「转码中」且不可选用
+                record.setVideoStatus(VideoStatusEnum.SUCCES.getCode());
+            }
         } else {
             // 文档类型，填写存储平台
             record.setStoragePlatform(feignSysConfig.getSys().getStoragePlatform());

@@ -5,6 +5,7 @@ import com.roncoo.education.common.base.ThreadContext;
 import com.roncoo.education.common.core.base.Result;
 import com.roncoo.education.common.core.enums.*;
 import com.roncoo.education.common.base.BaseBiz;
+import com.roncoo.education.common.tools.JsonUtil;
 import com.roncoo.education.common.upload.UploadFace;
 import com.roncoo.education.common.video.LiveUtil;
 import com.roncoo.education.common.video.VodUtil;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Component;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -144,7 +146,12 @@ public class AuthCourseBiz extends BaseBiz {
 
         if (ResourceTypeEnum.VIDEO.getCode().equals(resource.getResourceType()) || ResourceTypeEnum.AUDIO.getCode().equals(resource.getResourceType())) {
             // 音视频
-            playConfig(req, resp);
+            if (VodPlatformEnum.LOCAL.getCode().equals(resource.getVodPlatform())) {
+                // 本地存储：没有第三方播放器，直接把文件地址下发给前端用原生 video 播放
+                localPlayConfig(resource, resp);
+            } else {
+                playConfig(req, resp);
+            }
         } else if (ResourceTypeEnum.DOC.getCode().equals(resource.getResourceType())) {
             // 文档
             docConfig(resource, resp);
@@ -167,6 +174,18 @@ public class AuthCourseBiz extends BaseBiz {
         VideoConfig videoConfig = feignSysConfig.getVideo();
         videoConfig.setVodPlatform(resp.getVodPlatform());
         resp.setLiveViewConfig(LiveUtil.getLiveWatchUrl(videoConfig, liveWatchReq));
+    }
+
+    /**
+     * 本地存储视频的播放配置（二开新增）
+     * <p>
+     * 结构保持和第三方点播的 vodPlayConfig 一致（都是 JSON 字符串），
+     * 前端按 vodPlatform 分支解析，本地这一支只需要 playUrl。
+     */
+    private void localPlayConfig(Resource resource, AuthCourseSignResp resp) {
+        Map<String, String> config = new HashMap<>(2);
+        config.put("playUrl", resource.getResourceUrl());
+        resp.setVodPlayConfig(JsonUtil.toJsonString(config));
     }
 
     private void playConfig(AuthCourseSignReq req, AuthCourseSignResp resp) {

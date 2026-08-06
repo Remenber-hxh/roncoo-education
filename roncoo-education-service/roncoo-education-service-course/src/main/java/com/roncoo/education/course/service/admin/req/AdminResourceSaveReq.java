@@ -47,6 +47,9 @@ public class AdminResourceSaveReq implements Serializable {
     @Schema(description = "vid")
     private String videoVid;
 
+    @Schema(description = "视频时长(秒)，本地存储时由浏览器读取后上报")
+    private Integer videoLength;
+
     @Schema(description = "页数")
     private Integer docPage;
 
