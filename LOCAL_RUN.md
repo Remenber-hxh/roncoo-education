@@ -17,7 +17,32 @@
    - `seata.enabled=false`（本地无 Seata 服务器，否则启动崩溃）。
 4. **网关路由**：`roncoo-education-gateway/.../common/RouteConfig.java`（原路由在 Nacos，此处按端口重建）。
 
-## 三、启动顺序
+## 三、启动
+
+### 常用方式：一键脚本
+
+在 `D:\视频培训` 下双击 **启动平台.bat** / **停止平台.bat** 即可。
+脚本本体在本仓库 `scripts/start-platform.ps1` 与 `scripts/stop-platform.ps1`，
+根目录那两个 `.bat` 只是双击入口，内容各两行：
+
+```bat
+@echo off
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0roncoo-education\scripts\start-platform.ps1"
+echo.
+pause
+```
+
+要点：
+- 已在运行的服务会自动跳过，重复执行不会启动两份
+- 会按依赖顺序启动，并等每个端口真正就绪才继续
+- 日志统一在 `D:\视频培训\logs\`，按服务名分文件
+- MySQL 是 Windows 服务且已设开机自启与崩溃自动重启，脚本默认不停它
+- **`.bat` 内容必须是纯 ASCII**：cmd 按系统 ANSI 代码页解析批处理文件，
+  路径里带中文会乱码，所以 `.ps1` 用了英文名
+- **`.ps1` 必须存为 UTF-8 with BOM**：Windows PowerShell 5.1 读脚本默认按 GBK，
+  无 BOM 的 UTF-8 中文会乱码并直接报语法错误
+
+### 手动方式（排查问题时用）
 ```powershell
 # 0) 环境变量（每个新终端）
 $env:JAVA_HOME="C:\Program Files\Microsoft\jdk-17.0.19.10-hotspot"
