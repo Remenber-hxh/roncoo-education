@@ -22,7 +22,6 @@ public class CourseChapterPeriod implements Serializable {
 
     private String periodDesc;
 
-    private Integer isFree;
 
     private Long resourceId;
 
@@ -104,13 +103,7 @@ public class CourseChapterPeriod implements Serializable {
         this.periodDesc = periodDesc == null ? null : periodDesc.trim();
     }
 
-    public Integer getIsFree() {
-        return isFree;
-    }
 
-    public void setIsFree(Integer isFree) {
-        this.isFree = isFree;
-    }
 
     public Long getResourceId() {
         return resourceId;
@@ -151,7 +144,6 @@ public class CourseChapterPeriod implements Serializable {
         sb.append(", chapterId=").append(chapterId);
         sb.append(", periodName=").append(periodName);
         sb.append(", periodDesc=").append(periodDesc);
-        sb.append(", isFree=").append(isFree);
         sb.append(", resourceId=").append(resourceId);
         sb.append(", periodType=").append(periodType);
         sb.append(", liveId=").append(liveId);

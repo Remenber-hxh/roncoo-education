@@ -27,8 +27,6 @@ public class ApiCoursePageReq implements Serializable {
     @Schema(description = "课程名称")
     private String courseName;
 
-    @Schema(description = "是否免费(1:免费，0:收费)")
-    private Integer isFree;
 
     /**
      * 当前页

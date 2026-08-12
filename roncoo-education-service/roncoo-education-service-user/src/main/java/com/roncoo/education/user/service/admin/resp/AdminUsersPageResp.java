@@ -78,7 +78,4 @@ public class AdminUsersPageResp implements Serializable {
 
     @Schema(description = "注册来源")
     private Integer registerSource;
-
-    @Schema(description = "用户账户信息")
-    private AdminUsersAccountViewResp usersAccountViewResp;
 }

@@ -38,8 +38,6 @@ public class AdminCourseChapterPageReq implements Serializable {
     @Schema(description = "章节描述")
     private String chapterDesc;
 
-    @Schema(description = "是否免费(1免费，0收费)")
-    private Integer isFree;
 
     @Schema(description = "当前页")
     private int pageCurrent = 1;

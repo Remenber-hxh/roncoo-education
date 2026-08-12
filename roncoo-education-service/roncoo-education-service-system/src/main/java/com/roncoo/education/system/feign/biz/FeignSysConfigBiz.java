@@ -1,7 +1,5 @@
 package com.roncoo.education.system.feign.biz;
 
-import com.roncoo.education.common.pay.util.AliPayConfig;
-import com.roncoo.education.common.pay.util.WxPayConfig;
 import com.roncoo.education.common.base.BaseBiz;
 import com.roncoo.education.common.sms.Sms;
 import com.roncoo.education.system.feign.interfaces.vo.*;
@@ -25,13 +23,6 @@ public class FeignSysConfigBiz extends BaseBiz {
 
     public SysConfig getSys() {
         return sysConfigCommonBiz.getSysConfig(SysConfig.class);
-    }
-
-    public PayConfig getPay() {
-        PayConfig payConfig = new PayConfig();
-        payConfig.setAliPayConfig(sysConfigCommonBiz.getSysConfig(AliPayConfig.class));
-        payConfig.setWxPayConfig(sysConfigCommonBiz.getSysConfig(WxPayConfig.class));
-        return payConfig;
     }
 
     public Sms getSms() {

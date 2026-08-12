@@ -48,6 +48,4 @@ public class AdminCourseChapterViewResp implements Serializable {
     @Schema(description = "章节描述")
     private String chapterDesc;
 
-    @Schema(description = "是否免费(1免费，0收费)")
-    private Integer isFree;
 }

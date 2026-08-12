@@ -27,9 +27,4 @@ public class UserCourseBindingQO implements Serializable {
      */
     private Long courseId;
 
-    /**
-     * 购买类型(1支付，2免费)
-     */
-    private Integer buyType;
-
 }

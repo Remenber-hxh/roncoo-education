@@ -11,12 +11,8 @@
         <result column="category_id" jdbcType="BIGINT" property="categoryId"/>
         <result column="course_name" jdbcType="VARCHAR" property="courseName"/>
         <result column="course_logo" jdbcType="VARCHAR" property="courseLogo"/>
-        <result column="is_free" jdbcType="TINYINT" property="isFree"/>
-        <result column="ruling_price" jdbcType="DECIMAL" property="rulingPrice"/>
-        <result column="course_price" jdbcType="DECIMAL" property="coursePrice"/>
         <result column="is_putaway" jdbcType="TINYINT" property="isPutaway"/>
         <result column="course_sort" jdbcType="INTEGER" property="courseSort"/>
-        <result column="count_buy" jdbcType="INTEGER" property="countBuy"/>
         <result column="count_study" jdbcType="INTEGER" property="countStudy"/>
         <result column="speed_double" jdbcType="TINYINT" property="speedDouble"/>
         <result column="speed_drag" jdbcType="TINYINT" property="speedDrag"/>
@@ -88,8 +84,7 @@
     <sql id="Base_Column_List">
         id
         , gmt_create, gmt_modified, status_id, sort, lecturer_id, category_id, course_name,
-    course_logo, is_free, ruling_price, course_price, is_putaway, course_sort, count_buy, 
-    count_study, speed_double, speed_drag
+    course_logo, is_putaway, course_sort, count_study, speed_double, speed_drag
     </sql>
     <sql id="Blob_Column_List">
         introduce
@@ -153,16 +148,12 @@
         insert into course (id, gmt_create, gmt_modified,
                             status_id, sort, lecturer_id,
                             category_id, course_name, course_logo,
-                            is_free, ruling_price, course_price,
-                            is_putaway, course_sort, count_buy,
-                            count_study, speed_double, speed_drag,
+                            is_putaway, course_sort, count_study, speed_double, speed_drag,
                             introduce)
         values (#{id,jdbcType=BIGINT}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP},
                 #{statusId,jdbcType=TINYINT}, #{sort,jdbcType=INTEGER}, #{lecturerId,jdbcType=BIGINT},
                 #{categoryId,jdbcType=BIGINT}, #{courseName,jdbcType=VARCHAR}, #{courseLogo,jdbcType=VARCHAR},
-                #{isFree,jdbcType=TINYINT}, #{rulingPrice,jdbcType=DECIMAL}, #{coursePrice,jdbcType=DECIMAL},
-                #{isPutaway,jdbcType=TINYINT}, #{courseSort,jdbcType=INTEGER}, #{countBuy,jdbcType=INTEGER},
-                #{countStudy,jdbcType=INTEGER}, #{speedDouble,jdbcType=TINYINT}, #{speedDrag,jdbcType=TINYINT},
+                #{isPutaway,jdbcType=TINYINT}, #{courseSort,jdbcType=INTEGER}, #{countStudy,jdbcType=INTEGER}, #{speedDouble,jdbcType=TINYINT}, #{speedDrag,jdbcType=TINYINT},
                 #{introduce,jdbcType=LONGVARCHAR})
     </insert>
     <insert id="insertSelective" parameterType="com.roncoo.education.course.dao.impl.mapper.entity.Course">
@@ -195,23 +186,11 @@
             <if test="courseLogo != null">
                 course_logo,
             </if>
-            <if test="isFree != null">
-                is_free,
-            </if>
-            <if test="rulingPrice != null">
-                ruling_price,
-            </if>
-            <if test="coursePrice != null">
-                course_price,
-            </if>
             <if test="isPutaway != null">
                 is_putaway,
             </if>
             <if test="courseSort != null">
                 course_sort,
-            </if>
-            <if test="countBuy != null">
-                count_buy,
             </if>
             <if test="countStudy != null">
                 count_study,
@@ -254,23 +233,11 @@
             <if test="courseLogo != null">
                 #{courseLogo,jdbcType=VARCHAR},
             </if>
-            <if test="isFree != null">
-                #{isFree,jdbcType=TINYINT},
-            </if>
-            <if test="rulingPrice != null">
-                #{rulingPrice,jdbcType=DECIMAL},
-            </if>
-            <if test="coursePrice != null">
-                #{coursePrice,jdbcType=DECIMAL},
-            </if>
             <if test="isPutaway != null">
                 #{isPutaway,jdbcType=TINYINT},
             </if>
             <if test="courseSort != null">
                 #{courseSort,jdbcType=INTEGER},
-            </if>
-            <if test="countBuy != null">
-                #{countBuy,jdbcType=INTEGER},
             </if>
             <if test="countStudy != null">
                 #{countStudy,jdbcType=INTEGER},
@@ -323,23 +290,11 @@
             <if test="record.courseLogo != null">
                 course_logo = #{record.courseLogo,jdbcType=VARCHAR},
             </if>
-            <if test="record.isFree != null">
-                is_free = #{record.isFree,jdbcType=TINYINT},
-            </if>
-            <if test="record.rulingPrice != null">
-                ruling_price = #{record.rulingPrice,jdbcType=DECIMAL},
-            </if>
-            <if test="record.coursePrice != null">
-                course_price = #{record.coursePrice,jdbcType=DECIMAL},
-            </if>
             <if test="record.isPutaway != null">
                 is_putaway = #{record.isPutaway,jdbcType=TINYINT},
             </if>
             <if test="record.courseSort != null">
                 course_sort = #{record.courseSort,jdbcType=INTEGER},
-            </if>
-            <if test="record.countBuy != null">
-                count_buy = #{record.countBuy,jdbcType=INTEGER},
             </if>
             <if test="record.countStudy != null">
                 count_study = #{record.countStudy,jdbcType=INTEGER},
@@ -369,12 +324,8 @@
         category_id = #{record.categoryId,jdbcType=BIGINT},
         course_name = #{record.courseName,jdbcType=VARCHAR},
         course_logo = #{record.courseLogo,jdbcType=VARCHAR},
-        is_free = #{record.isFree,jdbcType=TINYINT},
-        ruling_price = #{record.rulingPrice,jdbcType=DECIMAL},
-        course_price = #{record.coursePrice,jdbcType=DECIMAL},
         is_putaway = #{record.isPutaway,jdbcType=TINYINT},
         course_sort = #{record.courseSort,jdbcType=INTEGER},
-        count_buy = #{record.countBuy,jdbcType=INTEGER},
         count_study = #{record.countStudy,jdbcType=INTEGER},
         speed_double = #{record.speedDouble,jdbcType=TINYINT},
         speed_drag = #{record.speedDrag,jdbcType=TINYINT},
@@ -394,12 +345,8 @@
         category_id = #{record.categoryId,jdbcType=BIGINT},
         course_name = #{record.courseName,jdbcType=VARCHAR},
         course_logo = #{record.courseLogo,jdbcType=VARCHAR},
-        is_free = #{record.isFree,jdbcType=TINYINT},
-        ruling_price = #{record.rulingPrice,jdbcType=DECIMAL},
-        course_price = #{record.coursePrice,jdbcType=DECIMAL},
         is_putaway = #{record.isPutaway,jdbcType=TINYINT},
         course_sort = #{record.courseSort,jdbcType=INTEGER},
-        count_buy = #{record.countBuy,jdbcType=INTEGER},
         count_study = #{record.countStudy,jdbcType=INTEGER},
         speed_double = #{record.speedDouble,jdbcType=TINYINT},
         speed_drag = #{record.speedDrag,jdbcType=TINYINT}
@@ -434,23 +381,11 @@
             <if test="courseLogo != null">
                 course_logo = #{courseLogo,jdbcType=VARCHAR},
             </if>
-            <if test="isFree != null">
-                is_free = #{isFree,jdbcType=TINYINT},
-            </if>
-            <if test="rulingPrice != null">
-                ruling_price = #{rulingPrice,jdbcType=DECIMAL},
-            </if>
-            <if test="coursePrice != null">
-                course_price = #{coursePrice,jdbcType=DECIMAL},
-            </if>
             <if test="isPutaway != null">
                 is_putaway = #{isPutaway,jdbcType=TINYINT},
             </if>
             <if test="courseSort != null">
                 course_sort = #{courseSort,jdbcType=INTEGER},
-            </if>
-            <if test="countBuy != null">
-                count_buy = #{countBuy,jdbcType=INTEGER},
             </if>
             <if test="countStudy != null">
                 count_study = #{countStudy,jdbcType=INTEGER},
@@ -477,12 +412,8 @@
             category_id  = #{categoryId,jdbcType=BIGINT},
             course_name  = #{courseName,jdbcType=VARCHAR},
             course_logo  = #{courseLogo,jdbcType=VARCHAR},
-            is_free      = #{isFree,jdbcType=TINYINT},
-            ruling_price = #{rulingPrice,jdbcType=DECIMAL},
-            course_price = #{coursePrice,jdbcType=DECIMAL},
             is_putaway   = #{isPutaway,jdbcType=TINYINT},
             course_sort  = #{courseSort,jdbcType=INTEGER},
-            count_buy    = #{countBuy,jdbcType=INTEGER},
             count_study  = #{countStudy,jdbcType=INTEGER},
             speed_double = #{speedDouble,jdbcType=TINYINT},
             speed_drag   = #{speedDrag,jdbcType=TINYINT},
@@ -499,12 +430,8 @@
             category_id  = #{categoryId,jdbcType=BIGINT},
             course_name  = #{courseName,jdbcType=VARCHAR},
             course_logo  = #{courseLogo,jdbcType=VARCHAR},
-            is_free      = #{isFree,jdbcType=TINYINT},
-            ruling_price = #{rulingPrice,jdbcType=DECIMAL},
-            course_price = #{coursePrice,jdbcType=DECIMAL},
             is_putaway   = #{isPutaway,jdbcType=TINYINT},
             course_sort  = #{courseSort,jdbcType=INTEGER},
-            count_buy    = #{countBuy,jdbcType=INTEGER},
             count_study  = #{countStudy,jdbcType=INTEGER},
             speed_double = #{speedDouble,jdbcType=TINYINT},
             speed_drag   = #{speedDrag,jdbcType=TINYINT}

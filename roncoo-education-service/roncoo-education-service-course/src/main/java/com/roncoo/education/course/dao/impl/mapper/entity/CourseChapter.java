@@ -20,7 +20,6 @@ public class CourseChapter implements Serializable {
 
     private String chapterDesc;
 
-    private Integer isFree;
 
     private static final long serialVersionUID = 1L;
 
@@ -88,13 +87,7 @@ public class CourseChapter implements Serializable {
         this.chapterDesc = chapterDesc == null ? null : chapterDesc.trim();
     }
 
-    public Integer getIsFree() {
-        return isFree;
-    }
 
-    public void setIsFree(Integer isFree) {
-        this.isFree = isFree;
-    }
 
     @Override
     public String toString() {
@@ -110,7 +103,6 @@ public class CourseChapter implements Serializable {
         sb.append(", courseId=").append(courseId);
         sb.append(", chapterName=").append(chapterName);
         sb.append(", chapterDesc=").append(chapterDesc);
-        sb.append(", isFree=").append(isFree);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

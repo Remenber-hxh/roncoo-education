@@ -54,11 +54,4 @@ public interface IFeignSysConfig {
     @GetMapping(value = "/getSms")
     Sms getSms();
 
-    /**
-     * 支付配置
-     *
-     * @return
-     */
-    @GetMapping(value = "/getPay")
-    PayConfig getPay();
 }

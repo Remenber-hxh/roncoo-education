@@ -45,6 +45,4 @@ public class AdminUserCourseViewResp implements Serializable {
     @Schema(description = "课程ID")
     private Long courseId;
 
-    @Schema(description = "购买类型(1支付，2免费)")
-    private Integer buyType;
 }

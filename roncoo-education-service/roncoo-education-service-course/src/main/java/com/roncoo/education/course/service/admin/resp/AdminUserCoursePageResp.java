@@ -52,8 +52,6 @@ public class AdminUserCoursePageResp implements Serializable {
     @Schema(description = "课程封面")
     private String courseLogo;
 
-    @Schema(description = "购买类型(1支付，2免费)")
-    private Integer buyType;
 
     @Schema(description = "该课程总进度")
     private BigDecimal courseProgress = BigDecimal.ZERO;

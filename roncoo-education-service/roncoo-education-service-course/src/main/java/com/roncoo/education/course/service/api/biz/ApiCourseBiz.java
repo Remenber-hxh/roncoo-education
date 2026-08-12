@@ -65,9 +65,6 @@ public class ApiCourseBiz extends BaseBiz {
         if (ObjectUtil.isNotEmpty(req.getCategoryId())) {
             c.andCategoryIdEqualTo(req.getCategoryId());
         }
-        if (ObjectUtil.isNotEmpty(req.getIsFree())) {
-            c.andIsFreeEqualTo(req.getIsFree());
-        }
         if (StringUtils.hasText(req.getCourseName())) {
             c.andCourseNameLike(PageUtil.like(req.getCourseName()));
         }

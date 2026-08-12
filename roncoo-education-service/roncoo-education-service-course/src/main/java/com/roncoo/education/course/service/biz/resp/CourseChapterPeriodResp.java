@@ -50,8 +50,6 @@ public class CourseChapterPeriodResp implements Serializable {
     @Schema(description = "课时描述")
     private String periodDesc;
 
-    @Schema(description = "是否免费(1免费，0收费)")
-    private Integer isFree;
 
     @Schema(description = "资源ID")
     private Long resourceId;

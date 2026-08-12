@@ -65,9 +65,4 @@ public class AuthUsersResp implements Serializable {
     @Schema(description = "备注")
     private String remark;
 
-    @Schema(description = "可用金额")
-    private BigDecimal availableAmount;
-
-    @Schema(description = "冻结金额")
-    private BigDecimal freezeAmount;
 }

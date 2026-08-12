@@ -11,7 +11,6 @@
         <result column="chapter_id" jdbcType="BIGINT" property="chapterId"/>
         <result column="period_name" jdbcType="VARCHAR" property="periodName"/>
         <result column="period_desc" jdbcType="VARCHAR" property="periodDesc"/>
-        <result column="is_free" jdbcType="TINYINT" property="isFree"/>
         <result column="resource_id" jdbcType="BIGINT" property="resourceId"/>
         <result column="period_type" jdbcType="TINYINT" property="periodType"/>
         <result column="live_id" jdbcType="BIGINT" property="liveId"/>
@@ -79,7 +78,7 @@
     <sql id="Base_Column_List">
         id
         , gmt_create, gmt_modified, status_id, sort, course_id, chapter_id, period_name,
-    period_desc, is_free, resource_id, period_type, live_id
+    period_desc, resource_id, period_type, live_id
     </sql>
     <select id="selectByExample"
             parameterType="com.roncoo.education.course.dao.impl.mapper.entity.CourseChapterPeriodExample"
@@ -122,12 +121,12 @@
         insert into course_chapter_period (id, gmt_create, gmt_modified,
                                            status_id, sort, course_id,
                                            chapter_id, period_name, period_desc,
-                                           is_free, resource_id, period_type,
+                                           resource_id, period_type,
                                            live_id)
         values (#{id,jdbcType=BIGINT}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP},
                 #{statusId,jdbcType=TINYINT}, #{sort,jdbcType=INTEGER}, #{courseId,jdbcType=BIGINT},
                 #{chapterId,jdbcType=BIGINT}, #{periodName,jdbcType=VARCHAR}, #{periodDesc,jdbcType=VARCHAR},
-                #{isFree,jdbcType=TINYINT}, #{resourceId,jdbcType=BIGINT}, #{periodType,jdbcType=TINYINT},
+                #{resourceId,jdbcType=BIGINT}, #{periodType,jdbcType=TINYINT},
                 #{liveId,jdbcType=BIGINT})
     </insert>
     <insert id="insertSelective" parameterType="com.roncoo.education.course.dao.impl.mapper.entity.CourseChapterPeriod">
@@ -159,9 +158,6 @@
             </if>
             <if test="periodDesc != null">
                 period_desc,
-            </if>
-            <if test="isFree != null">
-                is_free,
             </if>
             <if test="resourceId != null">
                 resource_id,
@@ -200,9 +196,6 @@
             </if>
             <if test="periodDesc != null">
                 #{periodDesc,jdbcType=VARCHAR},
-            </if>
-            <if test="isFree != null">
-                #{isFree,jdbcType=TINYINT},
             </if>
             <if test="resourceId != null">
                 #{resourceId,jdbcType=BIGINT},
@@ -253,9 +246,6 @@
             <if test="record.periodDesc != null">
                 period_desc = #{record.periodDesc,jdbcType=VARCHAR},
             </if>
-            <if test="record.isFree != null">
-                is_free = #{record.isFree,jdbcType=TINYINT},
-            </if>
             <if test="record.resourceId != null">
                 resource_id = #{record.resourceId,jdbcType=BIGINT},
             </if>
@@ -281,7 +271,6 @@
         chapter_id = #{record.chapterId,jdbcType=BIGINT},
         period_name = #{record.periodName,jdbcType=VARCHAR},
         period_desc = #{record.periodDesc,jdbcType=VARCHAR},
-        is_free = #{record.isFree,jdbcType=TINYINT},
         resource_id = #{record.resourceId,jdbcType=BIGINT},
         period_type = #{record.periodType,jdbcType=TINYINT},
         live_id = #{record.liveId,jdbcType=BIGINT}
@@ -317,9 +306,6 @@
             <if test="periodDesc != null">
                 period_desc = #{periodDesc,jdbcType=VARCHAR},
             </if>
-            <if test="isFree != null">
-                is_free = #{isFree,jdbcType=TINYINT},
-            </if>
             <if test="resourceId != null">
                 resource_id = #{resourceId,jdbcType=BIGINT},
             </if>
@@ -343,7 +329,6 @@
             chapter_id   = #{chapterId,jdbcType=BIGINT},
             period_name  = #{periodName,jdbcType=VARCHAR},
             period_desc  = #{periodDesc,jdbcType=VARCHAR},
-            is_free      = #{isFree,jdbcType=TINYINT},
             resource_id  = #{resourceId,jdbcType=BIGINT},
             period_type  = #{periodType,jdbcType=TINYINT},
             live_id      = #{liveId,jdbcType=BIGINT}

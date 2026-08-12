@@ -19,9 +19,13 @@ public interface UserStudyDailyMapper {
     /**
      * 累加当日学习秒数。
      * 依赖唯一键 uk_user_course_date，同一天同一课程重复上报时累加而非插入新行。
+     * <p>
+     * study_date 用数据库的 CURDATE() 而不是应用传入的日期：
+     * JDBC 连接串的 serverTimezone 与数据库实际时区不一致时，应用算出的日期会整体偏移，
+     * 导致按日汇总落到错误的日期上。由数据库定日期可以规避这类配置问题。
      */
     @Update("insert into user_study_daily (id, user_id, course_id, study_date, duration_sec) "
-            + "values (#{id}, #{userId}, #{courseId}, #{studyDate}, #{durationSec}) "
+            + "values (#{id}, #{userId}, #{courseId}, CURDATE(), #{durationSec}) "
             + "on duplicate key update duration_sec = duration_sec + values(duration_sec)")
     int upsertAdd(UserStudyDaily record);
 

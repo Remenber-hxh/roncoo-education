@@ -1,7 +1,6 @@
 package com.roncoo.education.course.feign.biz;
 
 
-import com.roncoo.education.common.core.enums.BuyTypeEnum;
 import com.roncoo.education.common.tools.BeanUtil;
 import com.roncoo.education.common.base.BaseBiz;
 import com.roncoo.education.course.dao.CourseDao;
@@ -31,10 +30,7 @@ public class FeignUserCourseBiz extends BaseBiz {
     public int binding(UserCourseBindingQO qo) {
         UserCourse record = BeanUtil.copyProperties(qo, UserCourse.class);
         if (dao.save(record) > 0) {
-            if (record.getBuyType().equals(BuyTypeEnum.BUY.getCode())) {
-                // 课程购买数+1
-                courseDao.addCountBuy(1, qo.getCourseId());
-            }
+            // 二开：已移除商品/售卖模块，不再统计购买数
             // 课程学习数+1
             courseDao.addCountStudy(1, qo.getCourseId());
             return 1;

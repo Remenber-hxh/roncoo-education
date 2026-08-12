@@ -48,17 +48,9 @@ public class CourseResp implements Serializable {
     @Schema(description = "课程简介")
     private String introduce;
 
-    @Schema(description = "是否免费(1:免费，0:收费)")
-    private Integer isFree;
 
-    @Schema(description = "原价")
-    private BigDecimal rulingPrice;
 
-    @Schema(description = "优惠价")
-    private BigDecimal coursePrice;
 
-    @Schema(description = "购买人数")
-    private Integer countBuy;
 
     @Schema(description = "学习人数")
     private Integer countStudy;

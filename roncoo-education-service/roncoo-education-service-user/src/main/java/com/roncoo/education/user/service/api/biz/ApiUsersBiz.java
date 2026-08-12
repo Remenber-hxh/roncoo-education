@@ -22,11 +22,9 @@ import com.roncoo.education.common.sms.SmsFace;
 import com.roncoo.education.common.tools.*;
 import com.roncoo.education.system.feign.interfaces.IFeignSysConfig;
 import com.roncoo.education.system.feign.interfaces.vo.LoginConfig;
-import com.roncoo.education.user.dao.UsersAccountDao;
 import com.roncoo.education.user.dao.UsersDao;
 import com.roncoo.education.user.dao.UsersLogDao;
 import com.roncoo.education.user.dao.impl.mapper.entity.Users;
-import com.roncoo.education.user.dao.impl.mapper.entity.UsersAccount;
 import com.roncoo.education.user.dao.impl.mapper.entity.UsersLog;
 import com.roncoo.education.user.service.api.req.*;
 import com.roncoo.education.user.service.api.resp.UsersLoginResp;
@@ -62,8 +60,6 @@ public class ApiUsersBiz extends BaseBiz {
 
     @NotNull
     private final UsersDao usersDao;
-    @NotNull
-    private final UsersAccountDao usersAccountDao;
     @NotNull
     private final UsersLogDao usersLogDao;
     @NotNull
@@ -190,14 +186,7 @@ public class ApiUsersBiz extends BaseBiz {
             user.setNickname(userInfo.getNickname());
         }
         usersDao.save(user);
-
-        // 用户账户
-        UsersAccount usersAccount = new UsersAccount();
-        usersAccount.setUserId(user.getId());
-        usersAccount.setAvailableAmount(BigDecimal.ZERO);
-        usersAccount.setFreezeAmount(BigDecimal.ZERO);
-        usersAccount.setSign(Md5Util.md5(usersAccount.getUserId().toString(), usersAccount.getAvailableAmount().toPlainString(), usersAccount.getFreezeAmount().toPlainString()));
-        usersAccountDao.save(usersAccount);
+        // 二开：已移除商品/订单模块，不再创建用户资金账户
         return user;
     }
 

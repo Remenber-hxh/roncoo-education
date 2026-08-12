@@ -31,14 +31,8 @@ public class ApiZoneCourseResp implements Serializable {
     @Schema(description = "课程封面")
     private String courseLogo;
 
-    @Schema(description = "划线价")
-    private BigDecimal rulingPrice;
 
-    @Schema(description = "课程价")
-    private BigDecimal coursePrice;
 
-    @Schema(description = "购买人数")
-    private Integer countBuy;
 
     @Schema(description = "学习人数")
     private Integer countStudy;

@@ -23,17 +23,13 @@ public class Course implements Serializable {
 
     private String courseLogo;
 
-    private Integer isFree;
 
-    private BigDecimal rulingPrice;
 
-    private BigDecimal coursePrice;
 
     private Integer isPutaway;
 
     private Integer courseSort;
 
-    private Integer countBuy;
 
     private Integer countStudy;
 
@@ -117,29 +113,11 @@ public class Course implements Serializable {
         this.courseLogo = courseLogo == null ? null : courseLogo.trim();
     }
 
-    public Integer getIsFree() {
-        return isFree;
-    }
 
-    public void setIsFree(Integer isFree) {
-        this.isFree = isFree;
-    }
 
-    public BigDecimal getRulingPrice() {
-        return rulingPrice;
-    }
 
-    public void setRulingPrice(BigDecimal rulingPrice) {
-        this.rulingPrice = rulingPrice;
-    }
 
-    public BigDecimal getCoursePrice() {
-        return coursePrice;
-    }
 
-    public void setCoursePrice(BigDecimal coursePrice) {
-        this.coursePrice = coursePrice;
-    }
 
     public Integer getIsPutaway() {
         return isPutaway;
@@ -157,13 +135,7 @@ public class Course implements Serializable {
         this.courseSort = courseSort;
     }
 
-    public Integer getCountBuy() {
-        return countBuy;
-    }
 
-    public void setCountBuy(Integer countBuy) {
-        this.countBuy = countBuy;
-    }
 
     public Integer getCountStudy() {
         return countStudy;
@@ -212,12 +184,8 @@ public class Course implements Serializable {
         sb.append(", categoryId=").append(categoryId);
         sb.append(", courseName=").append(courseName);
         sb.append(", courseLogo=").append(courseLogo);
-        sb.append(", isFree=").append(isFree);
-        sb.append(", rulingPrice=").append(rulingPrice);
-        sb.append(", coursePrice=").append(coursePrice);
         sb.append(", isPutaway=").append(isPutaway);
         sb.append(", courseSort=").append(courseSort);
-        sb.append(", countBuy=").append(countBuy);
         sb.append(", countStudy=").append(countStudy);
         sb.append(", speedDouble=").append(speedDouble);
         sb.append(", speedDrag=").append(speedDrag);

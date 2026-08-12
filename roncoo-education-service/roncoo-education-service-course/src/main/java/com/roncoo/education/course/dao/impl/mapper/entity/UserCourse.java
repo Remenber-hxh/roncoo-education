@@ -18,7 +18,6 @@ public class UserCourse implements Serializable {
 
     private Long courseId;
 
-    private Integer buyType;
 
     private static final long serialVersionUID = 1L;
 
@@ -78,13 +77,7 @@ public class UserCourse implements Serializable {
         this.courseId = courseId;
     }
 
-    public Integer getBuyType() {
-        return buyType;
-    }
 
-    public void setBuyType(Integer buyType) {
-        this.buyType = buyType;
-    }
 
     @Override
     public String toString() {
@@ -99,7 +92,6 @@ public class UserCourse implements Serializable {
         sb.append(", sort=").append(sort);
         sb.append(", userId=").append(userId);
         sb.append(", courseId=").append(courseId);
-        sb.append(", buyType=").append(buyType);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

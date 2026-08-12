@@ -217,35 +217,22 @@ public class AuthCourseBiz extends BaseBiz {
     }
 
     /**
-     * @param period
-     * @return true 可以观看，false 不能观看
+     * 学习权限校验
+     * <p>
+     * 二开：已移除商品/售卖模块，内部培训平台的课程不再有免费/付费之分，
+     * 登录员工均可学习，首次访问时自动建立报名记录（user_course）。
+     * 该记录仍被学习进度、统计等功能使用，因此保留。
+     *
+     * @return 恒为 true
      */
     private Boolean check(CourseChapterPeriod period) {
         UserCourse userCourse = userCourseDao.getByCourseIdAndUserId(period.getCourseId(), ThreadContext.userId());
-        if (ObjectUtil.isNotEmpty(userCourse)) {
-            // 已经购买
-            return true;
-        }
-        Course course = courseDao.getById(period.getCourseId());
-        if (course.getIsFree().equals(FreeEnum.FREE.getCode())) {
-            // 课程免费
+        if (ObjectUtil.isEmpty(userCourse)) {
             userCourse = new UserCourse();
             userCourse.setUserId(ThreadContext.userId());
             userCourse.setCourseId(period.getCourseId());
-            userCourse.setBuyType(BuyTypeEnum.FREE.getCode());
             userCourseDao.save(userCourse);
-            return true;
         }
-        CourseChapter courseChapter = chapterDao.getById(period.getChapterId());
-        if (courseChapter.getIsFree().equals(FreeEnum.FREE.getCode())) {
-            // 章节免费
-            return true;
-        }
-        if (period.getIsFree().equals(FreeEnum.FREE.getCode())) {
-            // 课时免费
-            return true;
-        }
-        // 不能观看
-        return false;
+        return true;
     }
 }

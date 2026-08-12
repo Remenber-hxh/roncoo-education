@@ -7,7 +7,6 @@ import cn.hutool.core.util.StrUtil;
 import com.roncoo.education.common.base.page.Page;
 import com.roncoo.education.common.base.page.PageUtil;
 import com.roncoo.education.common.core.base.Result;
-import com.roncoo.education.common.core.enums.FreeEnum;
 import com.roncoo.education.common.core.enums.PeriodTypeEnum;
 import com.roncoo.education.common.core.enums.StatusIdEnum;
 import com.roncoo.education.common.tools.BeanUtil;
@@ -84,17 +83,9 @@ public class CourseBiz extends BaseBiz {
 
         Map<Long, BigDecimal> userStudyProgressMap = new HashMap<>();
         if (ObjectUtil.isNotEmpty(userId)) {
-            // userId存在，即为登录
-            if (courseResp.getIsFree().equals(FreeEnum.FREE.getCode()) || courseResp.getCoursePrice().compareTo(BigDecimal.ZERO) <= 0) {
-                // 免费课程，可以学习
-                courseResp.setAllowStudy(1);
-            } else {
-                // 收费课程
-                UserCourse userCourse = userCourseDao.getByCourseIdAndUserId(req.getCourseId(), userId);
-                if (ObjectUtil.isNotEmpty(userCourse)) {
-                    courseResp.setAllowStudy(1);
-                }
-            }
+            // userId存在，即为登录。
+            // 二开：已移除商品/售卖模块，课程不再有免费/付费之分，登录员工均可学习。
+            courseResp.setAllowStudy(1);
 
             // 课时进度
             List<UserStudy> userStudyList = userStudyDao.listByUserIdAndCourseId(userId, course.getId());

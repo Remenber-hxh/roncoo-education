@@ -35,11 +35,6 @@ public class FeignSysConfigController implements IFeignSysConfig {
     }
 
     @Override
-    public PayConfig getPay() {
-        return biz.getPay();
-    }
-
-    @Override
     public Sms getSms() {
         return biz.getSms();
     }

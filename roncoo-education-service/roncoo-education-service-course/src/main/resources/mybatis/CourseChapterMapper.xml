@@ -10,7 +10,6 @@
         <result column="course_id" jdbcType="BIGINT" property="courseId"/>
         <result column="chapter_name" jdbcType="VARCHAR" property="chapterName"/>
         <result column="chapter_desc" jdbcType="VARCHAR" property="chapterDesc"/>
-        <result column="is_free" jdbcType="TINYINT" property="isFree"/>
     </resultMap>
     <sql id="Example_Where_Clause">
         <where>
@@ -71,8 +70,7 @@
         </where>
     </sql>
     <sql id="Base_Column_List">
-        id, gmt_create, gmt_modified, status_id, sort, course_id, chapter_name, chapter_desc,
-    is_free
+        id, gmt_create, gmt_modified, status_id, sort, course_id, chapter_name, chapter_desc
     </sql>
     <select id="selectByExample" parameterType="com.roncoo.education.course.dao.impl.mapper.entity.CourseChapterExample" resultMap="BaseResultMap">
         select
@@ -111,10 +109,10 @@
     <insert id="insert" parameterType="com.roncoo.education.course.dao.impl.mapper.entity.CourseChapter">
         insert into course_chapter (id, gmt_create, gmt_modified,
                                     status_id, sort, course_id,
-                                    chapter_name, chapter_desc, is_free)
+                                    chapter_name, chapter_desc)
         values (#{id,jdbcType=BIGINT}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP},
                 #{statusId,jdbcType=TINYINT}, #{sort,jdbcType=INTEGER}, #{courseId,jdbcType=BIGINT},
-                #{chapterName,jdbcType=VARCHAR}, #{chapterDesc,jdbcType=VARCHAR}, #{isFree,jdbcType=TINYINT})
+                #{chapterName,jdbcType=VARCHAR}, #{chapterDesc,jdbcType=VARCHAR})
     </insert>
     <insert id="insertSelective" parameterType="com.roncoo.education.course.dao.impl.mapper.entity.CourseChapter">
         insert into course_chapter
@@ -143,9 +141,6 @@
             <if test="chapterDesc != null">
                 chapter_desc,
             </if>
-            <if test="isFree != null">
-                is_free,
-            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="id != null">
@@ -171,9 +166,6 @@
             </if>
             <if test="chapterDesc != null">
                 #{chapterDesc,jdbcType=VARCHAR},
-            </if>
-            <if test="isFree != null">
-                #{isFree,jdbcType=TINYINT},
             </if>
         </trim>
     </insert>
@@ -210,9 +202,6 @@
             <if test="record.chapterDesc != null">
                 chapter_desc = #{record.chapterDesc,jdbcType=VARCHAR},
             </if>
-            <if test="record.isFree != null">
-                is_free = #{record.isFree,jdbcType=TINYINT},
-            </if>
         </set>
         <if test="_parameter != null">
             <include refid="Update_By_Example_Where_Clause"/>
@@ -227,9 +216,7 @@
         sort = #{record.sort,jdbcType=INTEGER},
         course_id = #{record.courseId,jdbcType=BIGINT},
         chapter_name = #{record.chapterName,jdbcType=VARCHAR},
-        chapter_desc = #{record.chapterDesc,jdbcType=VARCHAR},
-        is_free = #{record.isFree,jdbcType=TINYINT}
-        <if test="_parameter != null">
+        chapter_desc = #{record.chapterDesc,jdbcType=VARCHAR},<if test="_parameter != null">
             <include refid="Update_By_Example_Where_Clause"/>
         </if>
     </update>
@@ -257,9 +244,6 @@
             <if test="chapterDesc != null">
                 chapter_desc = #{chapterDesc,jdbcType=VARCHAR},
             </if>
-            <if test="isFree != null">
-                is_free = #{isFree,jdbcType=TINYINT},
-            </if>
         </set>
         where id = #{id,jdbcType=BIGINT}
     </update>
@@ -271,8 +255,6 @@
             sort         = #{sort,jdbcType=INTEGER},
             course_id    = #{courseId,jdbcType=BIGINT},
             chapter_name = #{chapterName,jdbcType=VARCHAR},
-            chapter_desc = #{chapterDesc,jdbcType=VARCHAR},
-            is_free      = #{isFree,jdbcType=TINYINT}
-        where id = #{id,jdbcType=BIGINT}
+            chapter_desc = #{chapterDesc,jdbcType=VARCHAR},where id = #{id,jdbcType=BIGINT}
     </update>
 </mapper>

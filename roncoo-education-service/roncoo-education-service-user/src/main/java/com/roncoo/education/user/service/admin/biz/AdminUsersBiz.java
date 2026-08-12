@@ -9,16 +9,13 @@ import com.roncoo.education.common.core.base.Result;
 import com.roncoo.education.common.tools.BeanUtil;
 import com.roncoo.education.common.tools.Md5Util;
 import com.roncoo.education.common.base.BaseBiz;
-import com.roncoo.education.user.dao.UsersAccountDao;
 import com.roncoo.education.user.dao.UsersDao;
 import com.roncoo.education.user.dao.impl.mapper.entity.Users;
-import com.roncoo.education.user.dao.impl.mapper.entity.UsersAccount;
 import com.roncoo.education.user.dao.impl.mapper.entity.UsersExample;
 import com.roncoo.education.user.dao.impl.mapper.entity.UsersExample.Criteria;
 import com.roncoo.education.user.service.admin.req.AdminUsersEditReq;
 import com.roncoo.education.user.service.admin.req.AdminUsersPageReq;
 import com.roncoo.education.user.service.admin.req.AdminUsersSaveReq;
-import com.roncoo.education.user.service.admin.resp.AdminUsersAccountViewResp;
 import com.roncoo.education.user.service.admin.resp.AdminUsersPageResp;
 import com.roncoo.education.user.service.admin.resp.AdminUsersViewResp;
 import lombok.RequiredArgsConstructor;
@@ -43,8 +40,6 @@ public class AdminUsersBiz extends BaseBiz {
 
     @NotNull
     private final UsersDao dao;
-    @NotNull
-    private final UsersAccountDao usersAccountDao;
 
     /**
      * 用户信息分页
@@ -62,18 +57,9 @@ public class AdminUsersBiz extends BaseBiz {
         Page<Users> page = dao.page(req.getPageCurrent(), req.getPageSize(), example);
         Page<AdminUsersPageResp> respPage = PageUtil.transform(page, AdminUsersPageResp.class);
         if (CollUtil.isNotEmpty(respPage.getList())) {
-            List<UsersAccount> usersAccounts = usersAccountDao.listByUserIds(respPage.getList().stream().map(AdminUsersPageResp::getId).collect(Collectors.toList()));
-            Map<Long, AdminUsersAccountViewResp> usersAccountMap = null;
-            if (CollUtil.isNotEmpty(usersAccounts)) {
-                usersAccountMap = usersAccounts.stream().collect(Collectors.toMap(UsersAccount::getUserId, item -> BeanUtil.copyProperties(item, AdminUsersAccountViewResp.class)));
-            }
             for (AdminUsersPageResp resp : respPage.getList()) {
                 // 脱敏处理
                 resp.setMobile(DesensitizedUtil.mobilePhone(resp.getMobile()));
-                // 账户信息
-                if (usersAccountMap != null) {
-                    resp.setUsersAccountViewResp(usersAccountMap.get(resp.getId()));
-                }
             }
         }
         return Result.success(respPage);
@@ -100,19 +86,7 @@ public class AdminUsersBiz extends BaseBiz {
      * @return 用户信息
      */
     public Result<AdminUsersViewResp> view(Long id) {
-        AdminUsersViewResp usersViewResp = BeanUtil.copyProperties(dao.getById(id), AdminUsersViewResp.class);
-        UsersAccount account = usersAccountDao.getByUserId(id);
-        if (ObjectUtil.isEmpty(account)) {
-            /// 用户账户不存在，创建新账户
-            account = new UsersAccount();
-            account.setUserId(id);
-            account.setAvailableAmount(BigDecimal.ZERO);
-            account.setFreezeAmount(BigDecimal.ZERO);
-            account.setSign(Md5Util.md5(account.getUserId().toString(), account.getAvailableAmount().toPlainString(), account.getFreezeAmount().toPlainString()));
-            usersAccountDao.save(account);
-        }
-        usersViewResp.setUsersAccountViewResp(BeanUtil.copyProperties(account, AdminUsersAccountViewResp.class));
-        return Result.success(usersViewResp);
+        return Result.success(BeanUtil.copyProperties(dao.getById(id), AdminUsersViewResp.class));
     }
 
     /**

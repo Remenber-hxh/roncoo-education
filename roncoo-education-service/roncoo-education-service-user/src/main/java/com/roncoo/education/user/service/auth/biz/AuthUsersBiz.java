@@ -9,10 +9,8 @@ import com.roncoo.education.common.base.BaseBiz;
 import com.roncoo.education.common.base.BaseWxBiz;
 import com.roncoo.education.system.feign.interfaces.IFeignSysConfig;
 import com.roncoo.education.system.feign.interfaces.vo.LoginConfig;
-import com.roncoo.education.user.dao.UsersAccountDao;
 import com.roncoo.education.user.dao.UsersDao;
 import com.roncoo.education.user.dao.impl.mapper.entity.Users;
-import com.roncoo.education.user.dao.impl.mapper.entity.UsersAccount;
 import com.roncoo.education.user.service.auth.req.AuthBindingReq;
 import com.roncoo.education.user.service.auth.req.AuthUsersReq;
 import com.roncoo.education.user.service.auth.resp.AuthUsersResp;
@@ -36,8 +34,6 @@ public class AuthUsersBiz extends BaseBiz {
     @NotNull
     private final UsersDao dao;
     @NotNull
-    private final UsersAccountDao usersAccountDao;
-    @NotNull
     private final IFeignSysConfig feignSysConfig;
     @NotNull
     private final BaseWxBiz baseWxBiz;
@@ -45,13 +41,7 @@ public class AuthUsersBiz extends BaseBiz {
     public Result<AuthUsersResp> view() {
         Users users = dao.getById(ThreadContext.userId());
         if (users != null && users.getStatusId().equals(StatusIdEnum.YES.getCode())) {
-            AuthUsersResp resp = BeanUtil.copyProperties(users, AuthUsersResp.class);
-            UsersAccount usersAccount = usersAccountDao.getByUserId(users.getId());
-            if (usersAccount != null) {
-                resp.setAvailableAmount(usersAccount.getAvailableAmount());
-                resp.setFreezeAmount(usersAccount.getFreezeAmount());
-            }
-            return Result.success(resp);
+            return Result.success(BeanUtil.copyProperties(users, AuthUsersResp.class));
         }
         return Result.error("用户不存在或被禁用");
     }

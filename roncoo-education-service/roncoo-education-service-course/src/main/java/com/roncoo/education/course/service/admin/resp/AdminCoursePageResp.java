@@ -55,20 +55,12 @@ public class AdminCoursePageResp implements Serializable {
     @Schema(description = "课程简介")
     private String introduce;
 
-    @Schema(description = "是否免费(1:免费，0:收费)")
-    private Integer isFree;
 
-    @Schema(description = "划线价")
-    private BigDecimal rulingPrice;
 
-    @Schema(description = "价格")
-    private BigDecimal coursePrice;
 
     @Schema(description = "是否上架(1:上架，0:下架)")
     private Integer isPutaway;
 
-    @Schema(description = "购买人数")
-    private Integer countBuy;
 
     @Schema(description = "学习人数")
     private Integer countStudy;

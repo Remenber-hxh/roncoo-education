@@ -6,7 +6,6 @@ import cn.hutool.core.util.ObjectUtil;
 import com.roncoo.education.common.core.base.Result;
 import com.roncoo.education.common.base.BaseBiz;
 import com.roncoo.education.course.feign.interfaces.IFeignCourse;
-import com.roncoo.education.user.dao.OrderInfoDao;
 import com.roncoo.education.user.dao.UsersDao;
 import com.roncoo.education.user.dao.UsersLogDao;
 import com.roncoo.education.user.dao.impl.mapper.entity.UsersExample;
@@ -41,9 +40,6 @@ public class AdminStatBiz extends BaseBiz {
     @NotNull
     private final IFeignCourse feignCourse;
 
-    @NotNull
-    private final OrderInfoDao orderInfoDao;
-
     public Result<AdminStatLoginResp> statLogin(Integer dates) {
         AdminStatLoginResp resp = new AdminStatLoginResp();
         List<AdminStatLogin> respList = usersLogDao.statByDate(dates);
@@ -64,28 +60,10 @@ public class AdminStatBiz extends BaseBiz {
     }
 
     public Result<AdminStatDataResp> statData() {
+        // 二开：已移除商品/订单模块，概况页只统计员工数与课程数
         AdminStatDataResp resp = new AdminStatDataResp();
-        String tomorrow = DateUtil.formatDate(DateUtil.tomorrow());
-        String yesterday = DateUtil.formatDate(DateUtil.yesterday());
-        List<AdminOrderStat> stats = orderInfoDao.stat(yesterday, tomorrow);
-        if (CollUtil.isNotEmpty(stats)) {
-            Map<String, AdminOrderStat> maps = stats.stream().collect(Collectors.toMap(s -> s.getDates(), s -> s));
-            AdminOrderStat todayMap = maps.get(DateUtil.today());
-            if (ObjectUtil.isNotNull(todayMap)) {
-                resp.setTodayOrder(todayMap.getOrders());
-                resp.setTodayMoney(todayMap.getMoneys());
-            }
-            AdminOrderStat yesterdayMap = maps.get(yesterday);
-            if (ObjectUtil.isNotNull(yesterdayMap)) {
-                resp.setYesterdayOrder(yesterdayMap.getOrders());
-                resp.setYesterdayMoney(yesterdayMap.getMoneys());
-            }
-        }
         resp.setUserSum(usersDao.count(new UsersExample()));
         resp.setCourseSum(feignCourse.count());
-        AdminOrderInfoStatResp statResp = orderInfoDao.stat(null);
-        resp.setOrderSum(statResp.getCourseBuySum());
-        resp.setOrderMoney(statResp.getCourseBuyMoney());
         return Result.success(resp);
     }
 

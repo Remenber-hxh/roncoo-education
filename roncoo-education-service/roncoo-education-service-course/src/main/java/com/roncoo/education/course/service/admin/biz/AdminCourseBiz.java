@@ -5,7 +5,6 @@ import cn.hutool.core.util.ObjectUtil;
 import com.roncoo.education.common.base.page.Page;
 import com.roncoo.education.common.base.page.PageUtil;
 import com.roncoo.education.common.core.base.Result;
-import com.roncoo.education.common.core.enums.FreeEnum;
 import com.roncoo.education.common.tools.BeanUtil;
 import com.roncoo.education.common.base.BaseBiz;
 import com.roncoo.education.course.dao.CategoryDao;
@@ -93,19 +92,10 @@ public class AdminCourseBiz extends BaseBiz {
      * @return 添加结果
      */
     public Result<String> save(AdminCourseSaveReq req) {
-        if (req.getCoursePrice().compareTo(BigDecimal.ZERO) > 0) {
-            req.setIsFree(FreeEnum.CHARGE.getCode());
-        } else {
-            req.setIsFree(FreeEnum.FREE.getCode());
-        }
-        if (req.getCoursePrice().compareTo(req.getRulingPrice()) > 0) {
-            req.setRulingPrice(req.getCoursePrice());
-        }
         Course record = BeanUtil.copyProperties(req, Course.class);
         if (dao.save(record) > 0) {
             // 增加一个默认章节
             CourseChapter chapter = new CourseChapter();
-            chapter.setIsFree(record.getIsFree());
             chapter.setCourseId(record.getId());
             chapter.setChapterName("默认");
             chapter.setChapterDesc("第一章");
@@ -136,14 +126,6 @@ public class AdminCourseBiz extends BaseBiz {
      * @return 修改结果
      */
     public Result<String> edit(AdminCourseEditReq req) {
-        if (ObjectUtil.isNotNull(req.getCoursePrice()) && req.getCoursePrice().compareTo(BigDecimal.ZERO) > 0) {
-            req.setIsFree(FreeEnum.CHARGE.getCode());
-        } else {
-            req.setIsFree(FreeEnum.FREE.getCode());
-        }
-        if (ObjectUtil.isNotNull(req.getCoursePrice()) && req.getCoursePrice().compareTo(req.getRulingPrice()) > 0) {
-            req.setRulingPrice(req.getCoursePrice());
-        }
         Course record = BeanUtil.copyProperties(req, Course.class);
         if (dao.updateById(record) > 0) {
             return Result.success("操作成功");

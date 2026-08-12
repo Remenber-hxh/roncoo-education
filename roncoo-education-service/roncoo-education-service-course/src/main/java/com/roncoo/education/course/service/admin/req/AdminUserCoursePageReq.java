@@ -23,8 +23,6 @@ public class AdminUserCoursePageReq implements Serializable {
     @Schema(description = "用户ID")
     private Long userId;
 
-    @Schema(description = "购买类型(1支付，2免费)")
-    private Integer buyType;
 
     @Schema(description = "课程名称")
     private String courseName;

@@ -23,8 +23,6 @@ public class AdminUserCourseRecordReq implements Serializable {
     @Schema(description = "课程ID")
     private Long courseId;
 
-    @Schema(description = "购买类型(1支付，2免费)")
-    private Integer buyType;
 
     @Schema(description = "手机号")
     private String mobile;
