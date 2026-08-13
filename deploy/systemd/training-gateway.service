@@ -1,0 +1,28 @@
+[Unit]
+Description=Training Platform - Gateway (7700)
+After=network.target training-system.service training-user.service training-course.service
+Wants=training-system.service training-user.service training-course.service
+
+[Service]
+Type=simple
+User=training
+WorkingDirectory=/opt/training
+
+# 敏感配置（数据库密码、JWT 密钥、文件签名密钥）从这里读，
+# 该文件权限设 600，不进代码库
+EnvironmentFile=/opt/training/conf/training.env
+
+ExecStart=/usr/bin/java -Xms256m -Xmx512m \
+  -jar /opt/training/app/gateway.jar \
+  --spring.profiles.active=prod \
+  --spring.config.additional-location=file:/opt/training/conf/
+
+# 崩溃自动重启：这是本地环境吃过亏的地方（MySQL 挂了没自动起，排查一晚上）
+Restart=always
+RestartSec=10
+
+StandardOutput=append:/opt/training/logs/gateway.log
+StandardError=append:/opt/training/logs/gateway.log
+
+[Install]
+WantedBy=multi-user.target

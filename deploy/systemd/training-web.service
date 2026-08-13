@@ -1,0 +1,24 @@
+[Unit]
+Description=Training Platform - Portal (Nuxt SSR, 3000)
+After=network.target training-gateway.service
+Wants=training-gateway.service
+
+[Service]
+Type=simple
+User=training
+WorkingDirectory=/opt/training/web
+
+Environment=NODE_ENV=production
+Environment=NITRO_PORT=3000
+Environment=NITRO_HOST=127.0.0.1
+
+ExecStart=/usr/bin/node /opt/training/web/server/index.mjs
+
+Restart=always
+RestartSec=10
+
+StandardOutput=append:/opt/training/logs/web.log
+StandardError=append:/opt/training/logs/web.log
+
+[Install]
+WantedBy=multi-user.target

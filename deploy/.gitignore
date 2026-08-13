@@ -1,0 +1,5 @@
+# 真实的环境变量文件含数据库密码、JWT 密钥、文件签名密钥，绝不能进代码库。
+# 只提交 training.env.example 模板。
+training.env
+*.env
+!*.env.example

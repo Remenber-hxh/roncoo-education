@@ -1,0 +1,28 @@
+[Unit]
+Description=Training Platform - Course Service (7730)
+After=network.target mysqld.service redis.service
+Wants=mysqld.service redis.service
+
+[Service]
+Type=simple
+User=training
+WorkingDirectory=/opt/training
+
+# 敏感配置（数据库密码、JWT 密钥、文件签名密钥）从这里读，
+# 该文件权限设 600，不进代码库
+EnvironmentFile=/opt/training/conf/training.env
+
+ExecStart=/usr/bin/java -Xms256m -Xmx768m \
+  -jar /opt/training/app/course.jar \
+  --spring.profiles.active=prod \
+  --spring.config.additional-location=file:/opt/training/conf/
+
+# 崩溃自动重启
+Restart=always
+RestartSec=10
+
+StandardOutput=append:/opt/training/logs/course.log
+StandardError=append:/opt/training/logs/course.log
+
+[Install]
+WantedBy=multi-user.target
