@@ -78,8 +78,9 @@ public class UploadCommonBiz {
         if (ObjectUtil.isEmpty(uploadFace)) {
             return Result.error("暂不支持该类型");
         }
-        // 视频需要能被播放器直接访问，走公共读目录
-        String fileUrl = uploadFace.uploadDoc(videoFile, upload, true);
+        // 落私有目录：平台对公网开放，视频是公司资产，不能给直链。
+        // 播放时由 AuthCourseBiz 下发带过期时间的签名地址（见 FileSignUtil）。
+        String fileUrl = uploadFace.uploadDoc(videoFile, upload, false);
         if (!StringUtils.hasText(fileUrl)) {
             return Result.error("上传失败，请查看服务端日志");
         }

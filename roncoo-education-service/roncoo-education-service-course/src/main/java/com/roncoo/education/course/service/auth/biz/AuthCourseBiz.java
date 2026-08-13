@@ -5,6 +5,7 @@ import com.roncoo.education.common.base.ThreadContext;
 import com.roncoo.education.common.core.base.Result;
 import com.roncoo.education.common.core.enums.*;
 import com.roncoo.education.common.base.BaseBiz;
+import com.roncoo.education.common.tools.FileSignUtil;
 import com.roncoo.education.common.tools.JsonUtil;
 import com.roncoo.education.common.upload.UploadFace;
 import com.roncoo.education.common.video.LiveUtil;
@@ -21,6 +22,7 @@ import com.roncoo.education.system.feign.interfaces.vo.VideoConfig;
 import com.roncoo.education.user.feign.interfaces.IFeignUsers;
 import com.roncoo.education.user.feign.interfaces.vo.UsersVO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import jakarta.validation.constraints.NotNull;
@@ -54,6 +56,16 @@ public class AuthCourseBiz extends BaseBiz {
     private final UserStudyDao userStudyDao;
     @NotNull
     private final Map<String, UploadFace> uploadFaceMap;
+
+    /**
+     * 本地存储私有文件的签名密钥与有效期，见 application-prod.properties。
+     * 开发环境有默认值，生产必须覆盖，否则签名可被伪造。
+     */
+    @Value("${roncoo.file.sign-secret:roncooLocalFileDevSecret}")
+    private String fileSignSecret;
+
+    @Value("${roncoo.file.sign-expire-seconds:7200}")
+    private int fileSignExpireSeconds;
 
     @NotNull
     private final IFeignSysConfig feignSysConfig;
@@ -181,10 +193,13 @@ public class AuthCourseBiz extends BaseBiz {
      * <p>
      * 结构保持和第三方点播的 vodPlayConfig 一致（都是 JSON 字符串），
      * 前端按 vodPlatform 分支解析，本地这一支只需要 playUrl。
+     * <p>
+     * 视频存在 private 目录下，直链不可访问，这里下发带过期时间的签名地址。
+     * 有效期需大于最长视频时长，否则播到一半地址失效。
      */
     private void localPlayConfig(Resource resource, AuthCourseSignResp resp) {
         Map<String, String> config = new HashMap<>(2);
-        config.put("playUrl", resource.getResourceUrl());
+        config.put("playUrl", FileSignUtil.signUrl(resource.getResourceUrl(), fileSignExpireSeconds, fileSignSecret));
         resp.setVodPlayConfig(JsonUtil.toJsonString(config));
     }
 

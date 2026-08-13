@@ -1,5 +1,6 @@
 package com.roncoo.education.system.service.file;
 
+import com.roncoo.education.common.tools.FileSignUtil;
 import com.roncoo.education.common.upload.Upload;
 import com.roncoo.education.system.service.biz.SysConfigCommonBiz;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -7,15 +8,18 @@ import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.HandlerMapping;
 
@@ -39,13 +43,35 @@ import java.nio.file.Paths;
 @RequestMapping("/system/images")
 public class LocalFileController {
 
+    /**
+     * 私有目录前缀。该目录下的文件（视频、私有文档）必须带签名和过期时间才能访问。
+     */
+    private static final String PRIVATE_PREFIX = "private/";
+
     private final SysConfigCommonBiz sysConfigCommonBiz;
 
+    @Value("${roncoo.file.sign-secret:}")
+    private String signSecret;
+
     @GetMapping("/**")
-    public ResponseEntity<Resource> get(HttpServletRequest request) {
+    public ResponseEntity<Resource> get(HttpServletRequest request,
+                                        @RequestParam(value = "e", required = false) Long expireAt,
+                                        @RequestParam(value = "s", required = false) String signature) {
         String relative = extractRelativePath(request);
         if (!StringUtils.hasText(relative)) {
             return ResponseEntity.notFound().build();
+        }
+
+        // 私有目录必须验签：平台对公网开放后，无签名等于把培训视频公开
+        if (relative.startsWith(PRIVATE_PREFIX)) {
+            if (!StringUtils.hasText(signSecret)) {
+                log.error("roncoo.file.sign-secret 未配置，拒绝私有文件访问");
+                return ResponseEntity.notFound().build();
+            }
+            if (expireAt == null || !FileSignUtil.verify(relative, expireAt, signature, signSecret)) {
+                log.warn("私有文件签名校验失败：{}", relative);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
         }
 
         Upload upload = sysConfigCommonBiz.getSysConfig(Upload.class);
