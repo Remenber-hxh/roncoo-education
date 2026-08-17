@@ -13,6 +13,8 @@ import com.roncoo.education.common.video.VodUtil;
 import com.roncoo.education.common.video.req.LiveWatchReq;
 import com.roncoo.education.common.video.req.VodPlayConfigReq;
 import com.roncoo.education.course.dao.*;
+import com.roncoo.education.course.dao.impl.mapper.PeriodContentMapper;
+import com.roncoo.education.course.dao.impl.mapper.UserAgreementSignMapper;
 import com.roncoo.education.course.dao.impl.mapper.entity.*;
 import com.roncoo.education.course.service.auth.req.AuthCourseSignReq;
 import com.roncoo.education.course.service.auth.resp.AuthCourseSignResp;
@@ -58,6 +60,15 @@ public class AuthCourseBiz extends BaseBiz {
     private final Map<String, UploadFace> uploadFaceMap;
 
     /**
+     * 图文课时用：正文按需查询、签署状态查询（二开新增）
+     */
+    @NotNull
+    private final PeriodContentMapper periodContentMapper;
+
+    @NotNull
+    private final UserAgreementSignMapper agreementSignMapper;
+
+    /**
      * 本地存储私有文件的签名密钥与有效期，见 application-prod.properties。
      * 开发环境有默认值，生产必须覆盖，否则签名可被伪造。
      */
@@ -86,18 +97,24 @@ public class AuthCourseBiz extends BaseBiz {
         if (ObjectUtil.isEmpty(period) || period.getStatusId().equals(StatusIdEnum.NO.getCode())) {
             return Result.error("该课时不存在或不可用");
         }
-        if (ObjectUtil.isEmpty(period.getResourceId())) {
+        // 图文课时的正文存在课时自身上，不依赖 resource，故资源校验前先分支
+        boolean isArticle = PeriodTypeEnum.ARTICLE.getCode().equals(period.getPeriodType());
+        if (!isArticle && ObjectUtil.isEmpty(period.getResourceId())) {
             return Result.error("该课时没设置资源");
         }
 
-        // 课程购买校验
+        // 学习权限校验
         if (!check(period)) {
-            return Result.error("请购买该课程");
+            return Result.error("暂无该课程的学习权限");
         }
 
         AuthCourseSignResp resp = new AuthCourseSignResp();
         resp.setPeriodId(req.getPeriodId());
         resp.setPeriodType(period.getPeriodType());
+
+        if (isArticle) {
+            return articleSign(period, resp);
+        }
 
         // 直播类型
         if (period.getPeriodType().equals(PeriodTypeEnum.LIVE.getCode())) {
@@ -186,6 +203,44 @@ public class AuthCourseBiz extends BaseBiz {
         VideoConfig videoConfig = feignSysConfig.getVideo();
         videoConfig.setVodPlatform(resp.getVodPlatform());
         resp.setLiveViewConfig(LiveUtil.getLiveWatchUrl(videoConfig, liveWatchReq));
+    }
+
+    /**
+     * 图文课时的学习配置（二开新增）
+     * <p>
+     * 与音视频不同，图文没有"资源"，正文直接存在课时上。这里负责：
+     * 建立/复用学习记录、按需取出正文、下发阅读达标条件与签署状态。
+     */
+    private Result<AuthCourseSignResp> articleSign(CourseChapterPeriod period, AuthCourseSignResp resp) {
+        Long userId = ThreadContext.userId();
+
+        UserStudy userStudy = userStudyDao.getByPeriodIdAndUserId(period.getId(), userId);
+        if (ObjectUtil.isEmpty(userStudy)) {
+            userStudy = new UserStudy();
+            userStudy.setCourseId(period.getCourseId());
+            userStudy.setChapterId(period.getChapterId());
+            userStudy.setPeriodId(period.getId());
+            userStudy.setUserId(userId);
+            // 图文归到文档类型，学习记录与统计口径和文档一致
+            userStudy.setResourceType(ResourceTypeEnum.DOC.getCode());
+            userStudy.setCurrentDuration(0);
+            userStudy.setCurrentPage(0);
+            userStudy.setProgress(BigDecimal.ZERO);
+            userStudyDao.save(userStudy);
+        }
+
+        resp.setStudyId(userStudy.getId());
+        resp.setResourceType(ResourceTypeEnum.DOC.getCode());
+        resp.setCurrentDuration(userStudy.getCurrentDuration());
+        resp.setCurrentPage(userStudy.getCurrentPage());
+        resp.setProgress(userStudy.getProgress());
+
+        // 正文按需取，列表查询不含该字段
+        resp.setContent(periodContentMapper.selectContentById(period.getId()));
+        resp.setNeedSign(period.getNeedSign());
+        resp.setReadSeconds(period.getReadSeconds());
+        resp.setSigned(agreementSignMapper.exists(userId, period.getId()) > 0);
+        return Result.success(resp);
     }
 
     /**

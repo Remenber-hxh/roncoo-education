@@ -14,6 +14,12 @@
         <result column="resource_id" jdbcType="BIGINT" property="resourceId"/>
         <result column="period_type" jdbcType="TINYINT" property="periodType"/>
         <result column="live_id" jdbcType="BIGINT" property="liveId"/>
+        <result column="need_sign" jdbcType="TINYINT" property="needSign"/>
+        <result column="read_seconds" jdbcType="INTEGER" property="readSeconds"/>
+        <!-- content 是 LONGTEXT，故意不放进 Base_Column_List：
+             章节列表会一次取出课程下所有课时，带上正文会让门户课程详情页
+             把每篇图文的完整 HTML 都传一遍。正文由 selectContentById 单独取。 -->
+        <result column="content" jdbcType="LONGVARCHAR" property="content"/>
     </resultMap>
     <sql id="Example_Where_Clause">
         <where>
@@ -78,7 +84,7 @@
     <sql id="Base_Column_List">
         id
         , gmt_create, gmt_modified, status_id, sort, course_id, chapter_id, period_name,
-    period_desc, resource_id, period_type, live_id
+    period_desc, resource_id, period_type, live_id, need_sign, read_seconds
     </sql>
     <select id="selectByExample"
             parameterType="com.roncoo.education.course.dao.impl.mapper.entity.CourseChapterPeriodExample"
@@ -168,6 +174,15 @@
             <if test="liveId != null">
                 live_id,
             </if>
+            <if test="needSign != null">
+                need_sign,
+            </if>
+            <if test="readSeconds != null">
+                read_seconds,
+            </if>
+            <if test="content != null">
+                content,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="id != null">
@@ -205,6 +220,15 @@
             </if>
             <if test="liveId != null">
                 #{liveId,jdbcType=BIGINT},
+            </if>
+            <if test="needSign != null">
+                #{needSign,jdbcType=TINYINT},
+            </if>
+            <if test="readSeconds != null">
+                #{readSeconds,jdbcType=INTEGER},
+            </if>
+            <if test="content != null">
+                #{content,jdbcType=LONGVARCHAR},
             </if>
         </trim>
     </insert>
@@ -314,6 +338,15 @@
             </if>
             <if test="liveId != null">
                 live_id = #{liveId,jdbcType=BIGINT},
+            </if>
+            <if test="needSign != null">
+                need_sign = #{needSign,jdbcType=TINYINT},
+            </if>
+            <if test="readSeconds != null">
+                read_seconds = #{readSeconds,jdbcType=INTEGER},
+            </if>
+            <if test="content != null">
+                content = #{content,jdbcType=LONGVARCHAR},
             </if>
         </set>
         where id = #{id,jdbcType=BIGINT}

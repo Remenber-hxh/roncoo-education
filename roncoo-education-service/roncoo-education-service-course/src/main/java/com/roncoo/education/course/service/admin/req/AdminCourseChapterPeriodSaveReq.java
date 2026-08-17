@@ -76,4 +76,12 @@ public class AdminCourseChapterPeriodSaveReq implements Serializable {
     @Schema(description = "回放保存(1保存，2丢弃)")
     private Integer playbackSave;
 
+    @Schema(description = "图文正文(富文本HTML)，periodType=30 时使用")
+    private String content;
+
+    @Schema(description = "是否需要签署确认：0否 1是")
+    private Integer needSign;
+
+    @Schema(description = "阅读达标所需最短停留秒数，0表示不限制")
+    private Integer readSeconds;
 }

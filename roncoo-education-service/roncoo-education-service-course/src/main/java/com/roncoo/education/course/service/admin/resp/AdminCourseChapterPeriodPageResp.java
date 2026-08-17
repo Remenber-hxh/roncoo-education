@@ -54,4 +54,12 @@ public class AdminCourseChapterPeriodPageResp implements Serializable {
 
     @Schema(description = "资源ID")
     private Long resourceId;
+    @Schema(description = "图文正文(富文本HTML)，periodType=30 时使用")
+    private String content;
+
+    @Schema(description = "是否需要签署确认：0否 1是")
+    private Integer needSign;
+
+    @Schema(description = "阅读达标所需最短停留秒数，0表示不限制")
+    private Integer readSeconds;
 }

@@ -29,7 +29,46 @@ public class CourseChapterPeriod implements Serializable {
 
     private Long liveId;
 
+    /**
+     * 图文课时的正文（富文本HTML），period_type=30 时使用
+     */
+    private String content;
+
+    /**
+     * 是否需要阅读后签署确认：0否 1是
+     */
+    private Integer needSign;
+
+    /**
+     * 阅读达标所需最短停留秒数，0 表示不限制
+     */
+    private Integer readSeconds;
+
     private static final long serialVersionUID = 1L;
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public Integer getNeedSign() {
+        return needSign;
+    }
+
+    public void setNeedSign(Integer needSign) {
+        this.needSign = needSign;
+    }
+
+    public Integer getReadSeconds() {
+        return readSeconds;
+    }
+
+    public void setReadSeconds(Integer readSeconds) {
+        this.readSeconds = readSeconds;
+    }
 
     public Long getId() {
         return id;

@@ -12,6 +12,7 @@ import com.roncoo.education.course.dao.CourseChapterPeriodDao;
 import com.roncoo.education.course.dao.LiveDao;
 import com.roncoo.education.course.dao.ResourceDao;
 import com.roncoo.education.course.dao.UserStudyDao;
+import com.roncoo.education.course.dao.impl.mapper.PeriodContentMapper;
 import com.roncoo.education.course.dao.impl.mapper.entity.CourseChapterPeriod;
 import com.roncoo.education.course.dao.impl.mapper.entity.CourseChapterPeriodExample;
 import com.roncoo.education.course.dao.impl.mapper.entity.CourseChapterPeriodExample.Criteria;
@@ -57,6 +58,12 @@ public class AdminCourseChapterPeriodBiz extends BaseBiz {
     private final ResourceDao resourceDao;
     @NotNull
     private final IFeignLecturer feignLecturer;
+
+    /**
+     * 图文正文按需查询（二开新增）
+     */
+    @NotNull
+    private final PeriodContentMapper periodContentMapper;
 
     /**
      * 课时信息分页
@@ -153,7 +160,12 @@ public class AdminCourseChapterPeriodBiz extends BaseBiz {
      * @return 课时信息
      */
     public Result<AdminCourseChapterPeriodViewResp> view(Long id) {
-        return Result.success(BeanUtil.copyProperties(dao.getById(id), AdminCourseChapterPeriodViewResp.class));
+        AdminCourseChapterPeriodViewResp resp = BeanUtil.copyProperties(dao.getById(id), AdminCourseChapterPeriodViewResp.class);
+        if (resp != null && PeriodTypeEnum.ARTICLE.getCode().equals(resp.getPeriodType())) {
+            // 正文是 LONGTEXT，不在 Base_Column_List 里（列表查询不带），编辑时单独取
+            resp.setContent(periodContentMapper.selectContentById(id));
+        }
+        return Result.success(resp);
     }
 
     /**

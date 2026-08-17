@@ -62,4 +62,21 @@ public class AuthCourseSignResp implements Serializable {
 
     @Schema(description = "图片学习配置参数")
     private String picStudyConfig;
+
+    // ---------- 图文课时（periodType=30，二开新增）----------
+
+    @Schema(description = "图文正文（富文本HTML）")
+    private String content;
+
+    @Schema(description = "是否需要签署确认：0否 1是")
+    private Integer needSign;
+
+    @Schema(description = "阅读达标所需最短停留秒数，0表示不限制")
+    private Integer readSeconds;
+
+    @Schema(description = "当前用户是否已签署")
+    private Boolean signed;
+
+    @Schema(description = "当前学习进度百分比")
+    private java.math.BigDecimal progress;
 }
