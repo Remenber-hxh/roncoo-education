@@ -49,6 +49,8 @@ public class Users implements Serializable {
 
     private LocalDate hireDate;
 
+    private Long projectGroupId;
+
     private static final long serialVersionUID = 1L;
 
     public Long getId() {
@@ -227,6 +229,14 @@ public class Users implements Serializable {
         this.hireDate = hireDate;
     }
 
+    public Long getProjectGroupId() {
+        return projectGroupId;
+    }
+
+    public void setProjectGroupId(Long projectGroupId) {
+        this.projectGroupId = projectGroupId;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -255,6 +265,7 @@ public class Users implements Serializable {
         sb.append(", teamId=").append(teamId);
         sb.append(", position=").append(position);
         sb.append(", hireDate=").append(hireDate);
+        sb.append(", projectGroupId=").append(projectGroupId);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

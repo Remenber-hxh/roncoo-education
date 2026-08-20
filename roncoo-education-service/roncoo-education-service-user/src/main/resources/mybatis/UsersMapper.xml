@@ -24,6 +24,7 @@
     <result column="team_id" jdbcType="BIGINT" property="teamId" />
     <result column="position" jdbcType="VARCHAR" property="position" />
     <result column="hire_date" jdbcType="DATE" property="hireDate" />
+    <result column="project_group_id" jdbcType="BIGINT" property="projectGroupId" />
   </resultMap>
   <sql id="Example_Where_Clause">
     <where>
@@ -86,7 +87,8 @@
   <sql id="Base_Column_List">
     id, gmt_create, gmt_modified, status_id, mobile, mobile_salt, mobile_psw, nickname, 
     user_sex, user_age, user_head, remark, union_id, open_id, city, province, country, 
-    register_source, emp_no, team_id, position, hire_date
+    register_source, emp_no, team_id, position, hire_date, 
+    project_group_id
   </sql>
   <select id="selectByExample" parameterType="com.roncoo.education.user.dao.impl.mapper.entity.UsersExample" resultMap="BaseResultMap">
     select
@@ -129,7 +131,7 @@
       union_id, open_id, city, 
       province, country, register_source, 
       emp_no, team_id, position, 
-      hire_date
+      hire_date, project_group_id
       )
     values (#{id,jdbcType=BIGINT}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP}, 
       #{statusId,jdbcType=TINYINT}, #{mobile,jdbcType=VARCHAR}, #{mobileSalt,jdbcType=VARCHAR}, 
@@ -138,7 +140,7 @@
       #{unionId,jdbcType=VARCHAR}, #{openId,jdbcType=VARCHAR}, #{city,jdbcType=VARCHAR}, 
       #{province,jdbcType=VARCHAR}, #{country,jdbcType=VARCHAR}, #{registerSource,jdbcType=TINYINT}, 
       #{empNo,jdbcType=VARCHAR}, #{teamId,jdbcType=BIGINT}, #{position,jdbcType=VARCHAR}, 
-      #{hireDate,jdbcType=DATE}
+      #{hireDate,jdbcType=DATE}, #{projectGroupId,jdbcType=BIGINT}
       )
   </insert>
   <insert id="insertSelective" parameterType="com.roncoo.education.user.dao.impl.mapper.entity.Users">
@@ -210,6 +212,9 @@
       <if test="hireDate != null">
         hire_date,
       </if>
+      <if test="projectGroupId != null">
+        project_group_id,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -277,6 +282,9 @@
       </if>
       <if test="hireDate != null">
         #{hireDate,jdbcType=DATE},
+      </if>
+      <if test="projectGroupId != null">
+        #{projectGroupId,jdbcType=BIGINT},
       </if>
     </trim>
   </insert>
@@ -355,6 +363,9 @@
       <if test="record.hireDate != null">
         hire_date = #{record.hireDate,jdbcType=DATE},
       </if>
+      <if test="record.projectGroupId != null">
+        project_group_id = #{record.projectGroupId,jdbcType=BIGINT},
+      </if>
     </set>
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
@@ -383,7 +394,8 @@
       emp_no = #{record.empNo,jdbcType=VARCHAR},
       team_id = #{record.teamId,jdbcType=BIGINT},
       position = #{record.position,jdbcType=VARCHAR},
-      hire_date = #{record.hireDate,jdbcType=DATE}
+      hire_date = #{record.hireDate,jdbcType=DATE},
+      project_group_id = #{record.projectGroupId,jdbcType=BIGINT}
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
     </if>
@@ -454,6 +466,9 @@
       <if test="hireDate != null">
         hire_date = #{hireDate,jdbcType=DATE},
       </if>
+      <if test="projectGroupId != null">
+        project_group_id = #{projectGroupId,jdbcType=BIGINT},
+      </if>
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
@@ -479,7 +494,8 @@
       emp_no = #{empNo,jdbcType=VARCHAR},
       team_id = #{teamId,jdbcType=BIGINT},
       position = #{position,jdbcType=VARCHAR},
-      hire_date = #{hireDate,jdbcType=DATE}
+      hire_date = #{hireDate,jdbcType=DATE},
+      project_group_id = #{projectGroupId,jdbcType=BIGINT}
     where id = #{id,jdbcType=BIGINT}
   </update>
 </mapper>

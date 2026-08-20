@@ -37,8 +37,13 @@ public class AdminUsersProfileEditReq implements Serializable {
     @Schema(description = "工号")
     private String empNo;
 
+    // 班组和项目组是两个正交维度：班组=干什么活，项目组=在哪个点上班。
+    // 例：仓管属职能组，人却在无锡国际会议中心。
     @Schema(description = "班组ID")
     private Long teamId;
+
+    @Schema(description = "项目组ID")
+    private Long projectGroupId;
 
     @Size(max = 64, message = "岗位职务不能超过64个字符")
     @Schema(description = "岗位职务")

@@ -9,6 +9,7 @@ import com.roncoo.education.common.core.base.Result;
 import com.roncoo.education.common.tools.BeanUtil;
 import com.roncoo.education.common.tools.Md5Util;
 import com.roncoo.education.common.base.BaseBiz;
+import com.roncoo.education.user.dao.ProjectGroupDao;
 import com.roncoo.education.user.dao.TeamDao;
 import com.roncoo.education.user.dao.UsersDao;
 import com.roncoo.education.user.dao.impl.mapper.entity.Users;
@@ -46,6 +47,9 @@ public class AdminUsersBiz extends BaseBiz {
     @NotNull
     private final TeamDao teamDao;
 
+    @NotNull
+    private final ProjectGroupDao projectGroupDao;
+
     /**
      * 用户信息分页
      *
@@ -64,20 +68,30 @@ public class AdminUsersBiz extends BaseBiz {
         if (req.getTeamId() != null) {
             c.andTeamIdEqualTo(req.getTeamId());
         }
+        if (req.getProjectGroupId() != null) {
+            c.andProjectGroupIdEqualTo(req.getProjectGroupId());
+        }
         example.setOrderByClause("id desc");
         Page<Users> page = dao.page(req.getPageCurrent(), req.getPageSize(), example);
         Page<AdminUsersPageResp> respPage = PageUtil.transform(page, AdminUsersPageResp.class);
         if (CollUtil.isNotEmpty(respPage.getList())) {
-            // 班组名称一次查完再回填，不逐行查
+            // 班组和项目组名称各一次查完再回填，不逐行查
             List<Long> teamIds = respPage.getList().stream()
                     .map(AdminUsersPageResp::getTeamId).filter(java.util.Objects::nonNull).distinct().toList();
             Map<Long, String> teamNames = teamDao.listByIds(teamIds).stream()
                     .collect(Collectors.toMap(t -> t.getId(), t -> t.getTeamName()));
+            List<Long> groupIds = respPage.getList().stream()
+                    .map(AdminUsersPageResp::getProjectGroupId).filter(java.util.Objects::nonNull).distinct().toList();
+            Map<Long, String> groupNames = projectGroupDao.listByIds(groupIds).stream()
+                    .collect(Collectors.toMap(g -> g.getId(), g -> g.getGroupName()));
             for (AdminUsersPageResp resp : respPage.getList()) {
                 // 脱敏处理
                 resp.setMobile(DesensitizedUtil.mobilePhone(resp.getMobile()));
                 if (resp.getTeamId() != null) {
                     resp.setTeamName(teamNames.get(resp.getTeamId()));
+                }
+                if (resp.getProjectGroupId() != null) {
+                    resp.setProjectGroupName(groupNames.get(resp.getProjectGroupId()));
                 }
             }
         }
@@ -105,11 +119,15 @@ public class AdminUsersBiz extends BaseBiz {
         if (req.getTeamId() != null && teamDao.getById(req.getTeamId()) == null) {
             return Result.error("班组不存在");
         }
+        if (req.getProjectGroupId() != null && projectGroupDao.getById(req.getProjectGroupId()) == null) {
+            return Result.error("项目组不存在");
+        }
 
         Users record = new Users();
         record.setId(req.getId());
         record.setEmpNo(StringUtils.hasText(empNo) ? empNo : null);
         record.setTeamId(req.getTeamId());
+        record.setProjectGroupId(req.getProjectGroupId());
         record.setPosition(req.getPosition());
         record.setHireDate(req.getHireDate());
         if (dao.updateById(record) > 0) {

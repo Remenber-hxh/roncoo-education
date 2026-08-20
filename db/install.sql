@@ -17,6 +17,8 @@
 SOURCE schema_rebuild.sql;
 SOURCE exam_schema.sql;
 SOURCE w1_profile_and_study.sql;
+SOURCE w2_project_group.sql;
+SOURCE w2_team_seed.sql;
 
 -- 补齐反向重建时丢失的字段默认值。
 -- 不执行会导致后台新建的课程在员工端完全看不到，且没有任何报错。
@@ -40,6 +42,7 @@ SOURCE fix_dashboard_permission.sql;
 SOURCE fix_menu_and_config.sql;
 SOURCE fix_missing_routes.sql;
 SOURCE w2_team_menu.sql;
+SOURCE w2_project_group_menu.sql;
 
 -- ============ 四、演示数据（生产环境可跳过）============
 -- SOURCE seed_demo.sql;

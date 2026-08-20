@@ -1575,6 +1575,66 @@ public class UsersExample {
             addCriterion("hire_date not between", value1, value2, "hireDate");
             return (Criteria) this;
         }
+
+        public Criteria andProjectGroupIdIsNull() {
+            addCriterion("project_group_id is null");
+            return (Criteria) this;
+        }
+
+        public Criteria andProjectGroupIdIsNotNull() {
+            addCriterion("project_group_id is not null");
+            return (Criteria) this;
+        }
+
+        public Criteria andProjectGroupIdEqualTo(Long value) {
+            addCriterion("project_group_id =", value, "projectGroupId");
+            return (Criteria) this;
+        }
+
+        public Criteria andProjectGroupIdNotEqualTo(Long value) {
+            addCriterion("project_group_id <>", value, "projectGroupId");
+            return (Criteria) this;
+        }
+
+        public Criteria andProjectGroupIdGreaterThan(Long value) {
+            addCriterion("project_group_id >", value, "projectGroupId");
+            return (Criteria) this;
+        }
+
+        public Criteria andProjectGroupIdGreaterThanOrEqualTo(Long value) {
+            addCriterion("project_group_id >=", value, "projectGroupId");
+            return (Criteria) this;
+        }
+
+        public Criteria andProjectGroupIdLessThan(Long value) {
+            addCriterion("project_group_id <", value, "projectGroupId");
+            return (Criteria) this;
+        }
+
+        public Criteria andProjectGroupIdLessThanOrEqualTo(Long value) {
+            addCriterion("project_group_id <=", value, "projectGroupId");
+            return (Criteria) this;
+        }
+
+        public Criteria andProjectGroupIdIn(List<Long> values) {
+            addCriterion("project_group_id in", values, "projectGroupId");
+            return (Criteria) this;
+        }
+
+        public Criteria andProjectGroupIdNotIn(List<Long> values) {
+            addCriterion("project_group_id not in", values, "projectGroupId");
+            return (Criteria) this;
+        }
+
+        public Criteria andProjectGroupIdBetween(Long value1, Long value2) {
+            addCriterion("project_group_id between", value1, value2, "projectGroupId");
+            return (Criteria) this;
+        }
+
+        public Criteria andProjectGroupIdNotBetween(Long value1, Long value2) {
+            addCriterion("project_group_id not between", value1, value2, "projectGroupId");
+            return (Criteria) this;
+        }
     }
 
     public static class Criteria extends GeneratedCriteria {

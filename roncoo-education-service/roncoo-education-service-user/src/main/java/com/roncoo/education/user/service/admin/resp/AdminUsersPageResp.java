@@ -88,6 +88,12 @@ public class AdminUsersPageResp implements Serializable {
     @Schema(description = "班组名称")
     private String teamName;
 
+    @Schema(description = "项目组ID")
+    private Long projectGroupId;
+
+    @Schema(description = "项目组名称")
+    private String projectGroupName;
+
     @Schema(description = "岗位职务")
     private String position;
 
