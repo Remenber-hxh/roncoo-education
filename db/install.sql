@@ -39,11 +39,14 @@ SOURCE seed_permission.sql;
 SOURCE fix_dashboard_permission.sql;
 SOURCE fix_menu_and_config.sql;
 SOURCE fix_missing_routes.sql;
+SOURCE w2_team_menu.sql;
 
 -- ============ 四、演示数据（生产环境可跳过）============
 -- SOURCE seed_demo.sql;
 -- SOURCE seed_homepage.sql;
 -- SOURCE seed_portal_user.sql;
+-- 隐私政策正文：上线前需 HR / 法务过目，故默认不装
+-- SOURCE seed_privacy_policy.sql;
 
 -- ============ 校验 ============
 SELECT '表数量' AS 检查项, COUNT(*) AS 值 FROM information_schema.tables WHERE table_schema = DATABASE()
