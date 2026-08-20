@@ -42,6 +42,12 @@ public class AdminUsersPageReq implements Serializable {
     @Schema(description = "备注")
     private String remark;
 
+    @Schema(description = "工号")
+    private String empNo;
+
+    @Schema(description = "班组ID")
+    private Long teamId;
+
     @Schema(description = "当前页")
     private int pageCurrent = 1;
 

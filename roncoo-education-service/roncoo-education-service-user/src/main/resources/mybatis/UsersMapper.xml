@@ -20,6 +20,10 @@
     <result column="province" jdbcType="VARCHAR" property="province" />
     <result column="country" jdbcType="VARCHAR" property="country" />
     <result column="register_source" jdbcType="TINYINT" property="registerSource" />
+    <result column="emp_no" jdbcType="VARCHAR" property="empNo" />
+    <result column="team_id" jdbcType="BIGINT" property="teamId" />
+    <result column="position" jdbcType="VARCHAR" property="position" />
+    <result column="hire_date" jdbcType="DATE" property="hireDate" />
   </resultMap>
   <sql id="Example_Where_Clause">
     <where>
@@ -82,7 +86,7 @@
   <sql id="Base_Column_List">
     id, gmt_create, gmt_modified, status_id, mobile, mobile_salt, mobile_psw, nickname, 
     user_sex, user_age, user_head, remark, union_id, open_id, city, province, country, 
-    register_source
+    register_source, emp_no, team_id, position, hire_date
   </sql>
   <select id="selectByExample" parameterType="com.roncoo.education.user.dao.impl.mapper.entity.UsersExample" resultMap="BaseResultMap">
     select
@@ -123,14 +127,18 @@
       mobile_psw, nickname, user_sex, 
       user_age, user_head, remark, 
       union_id, open_id, city, 
-      province, country, register_source
+      province, country, register_source, 
+      emp_no, team_id, position, 
+      hire_date
       )
     values (#{id,jdbcType=BIGINT}, #{gmtCreate,jdbcType=TIMESTAMP}, #{gmtModified,jdbcType=TIMESTAMP}, 
       #{statusId,jdbcType=TINYINT}, #{mobile,jdbcType=VARCHAR}, #{mobileSalt,jdbcType=VARCHAR}, 
       #{mobilePsw,jdbcType=VARCHAR}, #{nickname,jdbcType=VARCHAR}, #{userSex,jdbcType=TINYINT},
             #{userAge,jdbcType=DATE}, #{userHead,jdbcType=VARCHAR}, #{remark,jdbcType=VARCHAR},
       #{unionId,jdbcType=VARCHAR}, #{openId,jdbcType=VARCHAR}, #{city,jdbcType=VARCHAR}, 
-      #{province,jdbcType=VARCHAR}, #{country,jdbcType=VARCHAR}, #{registerSource,jdbcType=TINYINT}
+      #{province,jdbcType=VARCHAR}, #{country,jdbcType=VARCHAR}, #{registerSource,jdbcType=TINYINT}, 
+      #{empNo,jdbcType=VARCHAR}, #{teamId,jdbcType=BIGINT}, #{position,jdbcType=VARCHAR}, 
+      #{hireDate,jdbcType=DATE}
       )
   </insert>
   <insert id="insertSelective" parameterType="com.roncoo.education.user.dao.impl.mapper.entity.Users">
@@ -190,6 +198,18 @@
       <if test="registerSource != null">
         register_source,
       </if>
+      <if test="empNo != null">
+        emp_no,
+      </if>
+      <if test="teamId != null">
+        team_id,
+      </if>
+      <if test="position != null">
+        position,
+      </if>
+      <if test="hireDate != null">
+        hire_date,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="id != null">
@@ -245,6 +265,18 @@
       </if>
       <if test="registerSource != null">
         #{registerSource,jdbcType=TINYINT},
+      </if>
+      <if test="empNo != null">
+        #{empNo,jdbcType=VARCHAR},
+      </if>
+      <if test="teamId != null">
+        #{teamId,jdbcType=BIGINT},
+      </if>
+      <if test="position != null">
+        #{position,jdbcType=VARCHAR},
+      </if>
+      <if test="hireDate != null">
+        #{hireDate,jdbcType=DATE},
       </if>
     </trim>
   </insert>
@@ -311,6 +343,18 @@
       <if test="record.registerSource != null">
         register_source = #{record.registerSource,jdbcType=TINYINT},
       </if>
+      <if test="record.empNo != null">
+        emp_no = #{record.empNo,jdbcType=VARCHAR},
+      </if>
+      <if test="record.teamId != null">
+        team_id = #{record.teamId,jdbcType=BIGINT},
+      </if>
+      <if test="record.position != null">
+        position = #{record.position,jdbcType=VARCHAR},
+      </if>
+      <if test="record.hireDate != null">
+        hire_date = #{record.hireDate,jdbcType=DATE},
+      </if>
     </set>
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
@@ -335,7 +379,11 @@
       city = #{record.city,jdbcType=VARCHAR},
       province = #{record.province,jdbcType=VARCHAR},
       country = #{record.country,jdbcType=VARCHAR},
-      register_source = #{record.registerSource,jdbcType=TINYINT}
+      register_source = #{record.registerSource,jdbcType=TINYINT},
+      emp_no = #{record.empNo,jdbcType=VARCHAR},
+      team_id = #{record.teamId,jdbcType=BIGINT},
+      position = #{record.position,jdbcType=VARCHAR},
+      hire_date = #{record.hireDate,jdbcType=DATE}
     <if test="_parameter != null">
       <include refid="Update_By_Example_Where_Clause" />
     </if>
@@ -394,6 +442,18 @@
       <if test="registerSource != null">
         register_source = #{registerSource,jdbcType=TINYINT},
       </if>
+      <if test="empNo != null">
+        emp_no = #{empNo,jdbcType=VARCHAR},
+      </if>
+      <if test="teamId != null">
+        team_id = #{teamId,jdbcType=BIGINT},
+      </if>
+      <if test="position != null">
+        position = #{position,jdbcType=VARCHAR},
+      </if>
+      <if test="hireDate != null">
+        hire_date = #{hireDate,jdbcType=DATE},
+      </if>
     </set>
     where id = #{id,jdbcType=BIGINT}
   </update>
@@ -415,7 +475,11 @@
       city = #{city,jdbcType=VARCHAR},
       province = #{province,jdbcType=VARCHAR},
       country = #{country,jdbcType=VARCHAR},
-      register_source = #{registerSource,jdbcType=TINYINT}
+      register_source = #{registerSource,jdbcType=TINYINT},
+      emp_no = #{empNo,jdbcType=VARCHAR},
+      team_id = #{teamId,jdbcType=BIGINT},
+      position = #{position,jdbcType=VARCHAR},
+      hire_date = #{hireDate,jdbcType=DATE}
     where id = #{id,jdbcType=BIGINT}
   </update>
 </mapper>

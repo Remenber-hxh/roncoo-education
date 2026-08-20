@@ -7,6 +7,7 @@ import com.roncoo.education.common.log.SysLogCache;
 import com.roncoo.education.user.service.admin.biz.AdminUsersBiz;
 import com.roncoo.education.user.service.admin.req.AdminUsersEditReq;
 import com.roncoo.education.user.service.admin.req.AdminUsersPageReq;
+import com.roncoo.education.user.service.admin.req.AdminUsersProfileEditReq;
 import com.roncoo.education.user.service.admin.req.AdminUsersSaveReq;
 import com.roncoo.education.user.service.admin.resp.AdminUsersPageResp;
 import com.roncoo.education.user.service.admin.resp.AdminUsersViewResp;
@@ -58,6 +59,13 @@ public class AdminUsersController {
     @PutMapping(value = "/edit")
     public Result<String> edit(@RequestBody @Valid AdminUsersEditReq req) {
         return biz.edit(req);
+    }
+
+    @Operation(summary = "员工档案编辑")
+    @SysLog(value = "员工档案编辑")
+    @PutMapping(value = "/profile/edit")
+    public Result<String> profileEdit(@RequestBody @Valid AdminUsersProfileEditReq req) {
+        return biz.profileEdit(req);
     }
 
     @Operation(summary = "用户信息删除")

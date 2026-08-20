@@ -40,11 +40,9 @@ public class AdminUsersPageResp implements Serializable {
     @Schema(description = "手机号码")
     private String mobile;
 
-    @Schema(description = "密码盐")
-    private String mobileSalt;
-
-    @Schema(description = "登录密码")
-    private String mobilePsw;
+    // 二开：原本把 mobileSalt / mobilePsw 一起返回给后台前端。
+    // 前端一处都没用到，却让密码哈希和盐随列表接口出到浏览器，
+    // 这两个字段直接去掉。
 
     @Schema(description = "昵称")
     private String nickname;
@@ -78,4 +76,22 @@ public class AdminUsersPageResp implements Serializable {
 
     @Schema(description = "注册来源")
     private Integer registerSource;
+
+    // ---- 员工档案（二开）----
+
+    @Schema(description = "工号")
+    private String empNo;
+
+    @Schema(description = "班组ID")
+    private Long teamId;
+
+    @Schema(description = "班组名称")
+    private String teamName;
+
+    @Schema(description = "岗位职务")
+    private String position;
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @Schema(description = "入职日期")
+    private LocalDate hireDate;
 }

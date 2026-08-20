@@ -41,6 +41,14 @@ public class Users implements Serializable {
 
     private Integer registerSource;
 
+    private String empNo;
+
+    private Long teamId;
+
+    private String position;
+
+    private LocalDate hireDate;
+
     private static final long serialVersionUID = 1L;
 
     public Long getId() {
@@ -187,6 +195,38 @@ public class Users implements Serializable {
         this.registerSource = registerSource;
     }
 
+    public String getEmpNo() {
+        return empNo;
+    }
+
+    public void setEmpNo(String empNo) {
+        this.empNo = empNo;
+    }
+
+    public Long getTeamId() {
+        return teamId;
+    }
+
+    public void setTeamId(Long teamId) {
+        this.teamId = teamId;
+    }
+
+    public String getPosition() {
+        return position;
+    }
+
+    public void setPosition(String position) {
+        this.position = position;
+    }
+
+    public LocalDate getHireDate() {
+        return hireDate;
+    }
+
+    public void setHireDate(LocalDate hireDate) {
+        this.hireDate = hireDate;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -211,6 +251,10 @@ public class Users implements Serializable {
         sb.append(", province=").append(province);
         sb.append(", country=").append(country);
         sb.append(", registerSource=").append(registerSource);
+        sb.append(", empNo=").append(empNo);
+        sb.append(", teamId=").append(teamId);
+        sb.append(", position=").append(position);
+        sb.append(", hireDate=").append(hireDate);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();
