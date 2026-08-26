@@ -89,9 +89,30 @@ public class UserStudyDaoImpl extends AbstractBaseJdbc implements UserStudyDao {
         return null;
     }
 
+    /**
+     * 取每门课「最后学习的那条记录」，用于「我的课程」显示学习进度到哪一课时。
+     * <p>
+     * 原来写的是：
+     * select max(gmt_modified), course_id, chapter_id, period_id, progress
+     * ... GROUP BY course_id
+     * 两个问题：
+     * 1. chapter_id/period_id/progress 既没聚合也不在 GROUP BY 里，
+     * MySQL 5.7 起默认开启 only_full_group_by，直接报 SQL 语法错误。
+     * 表现是「我的课程」整页报「服务繁忙，请重试」——只在该用户
+     * 确实有学习记录时才会触发，没记录时查不到行、不报错，所以一直没暴露。
+     * 2. 就算关掉这个 sql_mode，这几列取的也是分组内任意一行，
+     * 未必来自 gmt_modified 最大的那条，进度会串。
+     * <p>
+     * 改用窗口函数按 course_id 分区取第一行，拿到的是完整且一致的一行。
+     * 并列时再按 id 倒序兜底，保证结果稳定。
+     */
     @Override
     public List<UserStudy> listByUserIdAndCourseIdsForMax(Long userId, List<Long> courseIdList) {
-        String sql = "select max(gmt_modified) as gmt_modified, course_id, chapter_id, period_id, progress from user_study where user_id=:USERID and course_id in (:COURSEIDS) GROUP BY course_id";
+        String sql = "select gmt_modified, course_id, chapter_id, period_id, progress from ("
+                + " select gmt_modified, course_id, chapter_id, period_id, progress,"
+                + " row_number() over (partition by course_id order by gmt_modified desc, id desc) as rn"
+                + " from user_study where user_id=:USERID and course_id in (:COURSEIDS)"
+                + ") t where t.rn = 1";
         Map<String, Object> map = new HashMap();
         map.put("USERID", userId);
         map.put("COURSEIDS", courseIdList);
