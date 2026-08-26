@@ -44,6 +44,7 @@ SOURCE fix_menu_and_config.sql;
 SOURCE fix_missing_routes.sql;
 SOURCE w2_team_menu.sql;
 SOURCE w2_project_group_menu.sql;
+SOURCE w3_user_delete_permission.sql;
 
 -- ============ 四、演示数据（生产环境可跳过）============
 -- SOURCE seed_demo.sql;
