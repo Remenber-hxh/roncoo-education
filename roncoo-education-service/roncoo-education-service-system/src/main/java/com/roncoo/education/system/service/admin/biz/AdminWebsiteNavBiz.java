@@ -15,6 +15,7 @@ import com.roncoo.education.system.service.admin.req.AdminWebsiteNavSaveReq;
 import com.roncoo.education.system.service.admin.resp.AdminWebsiteNavPageResp;
 import com.roncoo.education.system.service.admin.resp.AdminWebsiteNavViewResp;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -56,6 +57,7 @@ public class AdminWebsiteNavBiz extends BaseBiz {
      * @param req 头部导航
      * @return 添加结果
      */
+    @CacheEvict(cacheNames = "system", allEntries = true)
     public Result<String> save(AdminWebsiteNavSaveReq req) {
         WebsiteNav record = BeanUtil.copyProperties(req, WebsiteNav.class);
         if (dao.save(record) > 0) {
@@ -80,6 +82,7 @@ public class AdminWebsiteNavBiz extends BaseBiz {
      * @param req 头部导航修改对象
      * @return 修改结果
      */
+    @CacheEvict(cacheNames = "system", allEntries = true)
     public Result<String> edit(AdminWebsiteNavEditReq req) {
         WebsiteNav record = BeanUtil.copyProperties(req, WebsiteNav.class);
         if (dao.updateById(record) > 0) {
@@ -94,6 +97,7 @@ public class AdminWebsiteNavBiz extends BaseBiz {
      * @param id ID主键
      * @return 删除结果
      */
+    @CacheEvict(cacheNames = "system", allEntries = true)
     public Result<String> delete(Long id) {
         if (dao.deleteById(id) > 0) {
             return Result.success("操作成功");

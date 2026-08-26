@@ -25,6 +25,7 @@ import com.roncoo.education.system.service.admin.resp.AdminSysConfigListResp;
 import com.roncoo.education.system.service.admin.resp.AdminSysConfigPageResp;
 import com.roncoo.education.system.service.admin.resp.AdminSysConfigViewResp;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 
 import jakarta.validation.constraints.NotNull;
@@ -64,6 +65,7 @@ public class AdminSysConfigBiz extends BaseBiz {
      * @param req 系统配置
      * @return 添加结果
      */
+    @CacheEvict(cacheNames = "system", allEntries = true)
     public Result<String> save(AdminSysConfigSaveReq req) {
         SysConfig record = BeanUtil.copyProperties(req, SysConfig.class);
         if (dao.save(record) > 0) {
@@ -88,6 +90,7 @@ public class AdminSysConfigBiz extends BaseBiz {
      * @param req 系统配置修改对象
      * @return 修改结果
      */
+    @CacheEvict(cacheNames = "system", allEntries = true)
     public Result<String> edit(AdminSysConfigEditReq req) {
         SysConfig record = BeanUtil.copyProperties(req, SysConfig.class);
         if (dao.updateById(record) > 0) {
@@ -102,6 +105,7 @@ public class AdminSysConfigBiz extends BaseBiz {
      * @param id ID主键
      * @return 删除结果
      */
+    @CacheEvict(cacheNames = "system", allEntries = true)
     public Result<String> delete(Long id) {
         if (dao.deleteById(id) > 0) {
             return Result.success("操作成功");
@@ -151,6 +155,7 @@ public class AdminSysConfigBiz extends BaseBiz {
         return Result.success(BeanUtil.copyProperties(configList, AdminSysConfigListResp.class));
     }
 
+    @CacheEvict(cacheNames = "system", allEntries = true)
     public Result<String> init() {
         Map<String, String> configMap = dao.listByExample(new SysConfigExample()).stream().collect(Collectors.toMap(SysConfig::getConfigKey, SysConfig::getConfigValue));
         VideoConfig videoConfig = BeanUtil.objToBean(configMap, VideoConfig.class);

@@ -15,6 +15,7 @@ import com.roncoo.education.system.service.admin.req.AdminWebsiteCarouselSaveReq
 import com.roncoo.education.system.service.admin.resp.AdminWebsiteCarouselPageResp;
 import com.roncoo.education.system.service.admin.resp.AdminWebsiteCarouselViewResp;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 
 import jakarta.validation.constraints.NotNull;
@@ -58,6 +59,7 @@ public class AdminWebsiteCarouselBiz extends BaseBiz {
      * @param req 广告信息
      * @return 添加结果
      */
+    @CacheEvict(cacheNames = "system", allEntries = true)
     public Result<String> save(AdminWebsiteCarouselSaveReq req) {
         WebsiteCarousel record = BeanUtil.copyProperties(req, WebsiteCarousel.class);
         if (dao.save(record) > 0) {
@@ -82,6 +84,7 @@ public class AdminWebsiteCarouselBiz extends BaseBiz {
      * @param req 广告信息修改对象
      * @return 修改结果
      */
+    @CacheEvict(cacheNames = "system", allEntries = true)
     public Result<String> edit(AdminWebsiteCarouselEditReq req) {
         WebsiteCarousel record = BeanUtil.copyProperties(req, WebsiteCarousel.class);
         if (dao.updateById(record) > 0) {
@@ -96,6 +99,7 @@ public class AdminWebsiteCarouselBiz extends BaseBiz {
      * @param id ID主键
      * @return 删除结果
      */
+    @CacheEvict(cacheNames = "system", allEntries = true)
     public Result<String> delete(Long id) {
         if (dao.deleteById(id) > 0) {
             return Result.success("操作成功");
