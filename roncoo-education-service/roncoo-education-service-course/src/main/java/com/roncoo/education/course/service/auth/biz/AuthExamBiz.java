@@ -97,10 +97,18 @@ public class AuthExamBiz {
         Set<Long> picked = new HashSet<>();
         int seq = 1;
         for (ExamPaperRule rule : rules) {
-            List<ExamQuestion> questions = questionMapper.randomPick(rule.getCategoryId(), rule.getQuestionType(), rule.getQuestionCount());
+            // 多抽一些再去重：randomPick 只按 limit 取，遇到前一条规则已抽走的题会被跳过，
+            // 恰好取 questionCount 条容易凑不满
+            List<ExamQuestion> questions = questionMapper.randomPick(rule.getCategoryId(), paper.getCourseId(),
+                    rule.getChapterId(), rule.getQuestionType(), rule.getQuestionCount() * 3);
             int need = rule.getQuestionCount();
             int got = 0;
             for (ExamQuestion q : questions) {
+                // 够数就停。上面把抽取量放大到 3 倍是为了给去重留余量，
+                // 不加这个判断会把多抽的题全塞进试卷，题量直接超出规则
+                if (got >= need) {
+                    break;
+                }
                 if (picked.contains(q.getId())) {
                     continue;
                 }

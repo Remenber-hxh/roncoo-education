@@ -24,6 +24,9 @@ public class ExamQuestion implements Serializable {
     private Long categoryId;
     /** 关联课程(可空=模块通用题) */
     private Long courseId;
+
+    /** 章节ID，关联 course_chapter。为空表示这道题不限定章节 */
+    private Long chapterId;
     /** 1单选 2多选 3判断 */
     private Integer questionType;
     /** 题干 */

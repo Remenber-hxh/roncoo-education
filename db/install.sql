@@ -18,6 +18,7 @@ SOURCE schema_rebuild.sql;
 SOURCE exam_schema.sql;
 SOURCE w1_profile_and_study.sql;
 SOURCE w2_project_group.sql;
+SOURCE w3_question_chapter.sql;
 SOURCE w2_team_seed.sql;
 
 -- 补齐反向重建时丢失的字段默认值。

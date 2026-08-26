@@ -11,8 +11,8 @@ import java.util.List;
 @Mapper
 public interface ExamPaperRuleMapper {
 
-    @Insert("insert into exam_paper_rule (id, status_id, sort, paper_id, category_id, question_type, question_count, score_per_question) "
-            + "values (#{id}, #{statusId}, #{sort}, #{paperId}, #{categoryId}, #{questionType}, #{questionCount}, #{scorePerQuestion})")
+    @Insert("insert into exam_paper_rule (id, status_id, sort, paper_id, category_id, chapter_id, question_type, question_count, score_per_question) "
+            + "values (#{id}, #{statusId}, #{sort}, #{paperId}, #{categoryId}, #{chapterId}, #{questionType}, #{questionCount}, #{scorePerQuestion})")
     int insert(ExamPaperRule record);
 
     @Delete("delete from exam_paper_rule where id=#{id}")

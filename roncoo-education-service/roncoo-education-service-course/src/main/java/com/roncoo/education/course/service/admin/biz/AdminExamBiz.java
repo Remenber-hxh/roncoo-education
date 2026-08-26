@@ -33,12 +33,12 @@ public class AdminExamBiz {
     // ==================== 题库 ====================
 
     public Result<Page<ExamQuestion>> questionPage(AdminExamQuestionPageReq req) {
-        int count = questionMapper.pageCount(req.getCategoryId(), req.getQuestionType(), req.getKeyword());
+        int count = questionMapper.pageCount(req.getCategoryId(), req.getCourseId(), req.getChapterId(), req.getQuestionType(), req.getKeyword());
         int pageSize = PageUtil.checkPageSize(req.getPageSize());
         int pageCurrent = PageUtil.checkPageCurrent(count, pageSize, req.getPageCurrent());
         int totalPage = PageUtil.countTotalPage(count, pageSize);
-        List<ExamQuestion> list = questionMapper.page(req.getCategoryId(), req.getQuestionType(), req.getKeyword(),
-                PageUtil.countOffset(pageCurrent, pageSize), pageSize);
+        List<ExamQuestion> list = questionMapper.page(req.getCategoryId(), req.getCourseId(), req.getChapterId(),
+                req.getQuestionType(), req.getKeyword(), PageUtil.countOffset(pageCurrent, pageSize), pageSize);
         return Result.success(new Page<>(count, totalPage, pageCurrent, pageSize, list));
     }
 
@@ -49,7 +49,7 @@ public class AdminExamBiz {
         ExamQuestion record = new ExamQuestion()
                 .setId(IdWorker.getId()).setStatusId(req.getStatusId() == null ? 1 : req.getStatusId())
                 .setSort(req.getSort() == null ? 0 : req.getSort())
-                .setCategoryId(req.getCategoryId()).setCourseId(req.getCourseId())
+                .setCategoryId(req.getCategoryId()).setCourseId(req.getCourseId()).setChapterId(req.getChapterId())
                 .setQuestionType(req.getQuestionType()).setQuestionTitle(req.getQuestionTitle())
                 .setOptionsJson(req.getOptionsJson()).setCorrectAnswer(normalizeAnswer(req.getCorrectAnswer()))
                 .setAnalysis(req.getAnalysis()).setDifficulty(req.getDifficulty() == null ? 1 : req.getDifficulty());
@@ -63,13 +63,24 @@ public class AdminExamBiz {
         }
         ExamQuestion record = new ExamQuestion()
                 .setId(req.getId()).setStatusId(req.getStatusId()).setSort(req.getSort())
-                .setCategoryId(req.getCategoryId()).setCourseId(req.getCourseId())
+                .setCategoryId(req.getCategoryId()).setCourseId(req.getCourseId()).setChapterId(req.getChapterId())
                 .setQuestionType(req.getQuestionType()).setQuestionTitle(req.getQuestionTitle())
                 .setOptionsJson(req.getOptionsJson())
                 .setCorrectAnswer(req.getCorrectAnswer() == null ? null : normalizeAnswer(req.getCorrectAnswer()))
                 .setAnalysis(req.getAnalysis()).setDifficulty(req.getDifficulty());
         questionMapper.updateById(record);
         return Result.success("修改成功");
+    }
+
+    /**
+     * 按章节统计题量。出题时用来看「这一章还差几道题」，
+     * 组卷前也靠它判断题量够不够抽。
+     */
+    public Result<java.util.List<java.util.Map<String, Object>>> questionCountByChapter(Long courseId) {
+        if (courseId == null) {
+            return Result.error("课程ID不能为空");
+        }
+        return Result.success(questionMapper.countByChapter(courseId));
     }
 
     public Result<String> questionDelete(Long id) {
@@ -140,7 +151,7 @@ public class AdminExamBiz {
         for (AdminExamPaperEditReq.RuleItem item : rules) {
             ExamPaperRule rule = new ExamPaperRule()
                     .setId(IdWorker.getId()).setStatusId(1).setSort(sort++)
-                    .setPaperId(paperId).setCategoryId(item.getCategoryId())
+                    .setPaperId(paperId).setCategoryId(item.getCategoryId()).setChapterId(item.getChapterId())
                     .setQuestionType(item.getQuestionType())
                     .setQuestionCount(item.getQuestionCount() == null ? 10 : item.getQuestionCount())
                     .setScorePerQuestion(item.getScorePerQuestion() == null ? 4 : item.getScorePerQuestion());

@@ -34,6 +34,8 @@ public class AdminExamPaperEditReq implements Serializable {
     public static class RuleItem implements Serializable {
         private static final long serialVersionUID = 1L;
         private Long categoryId;
+        /** 限定从哪一章抽题，为空表示全课程范围内抽 */
+        private Long chapterId;
         private Integer questionType;
         private Integer questionCount;
         private Integer scorePerQuestion;

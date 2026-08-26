@@ -33,6 +33,12 @@ public class AdminExamController {
         return biz.questionPage(req);
     }
 
+    @Operation(summary = "按章节统计题量")
+    @GetMapping("/question/count/chapter")
+    public Result<java.util.List<java.util.Map<String, Object>>> questionCountByChapter(@RequestParam Long courseId) {
+        return biz.questionCountByChapter(courseId);
+    }
+
     @Operation(summary = "题目新增")
     @PostMapping("/question/save")
     public Result<String> questionSave(@RequestBody AdminExamQuestionEditReq req) {

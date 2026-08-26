@@ -23,6 +23,9 @@ public class ExamPaperRule implements Serializable {
     private Long paperId;
     /** 从哪个模块抽(空=全库) */
     private Long categoryId;
+
+    /** 限定从哪一章抽题，为空表示不限章节 */
+    private Long chapterId;
     /** 抽哪种题型(空=不限) */
     private Integer questionType;
     private Integer questionCount;

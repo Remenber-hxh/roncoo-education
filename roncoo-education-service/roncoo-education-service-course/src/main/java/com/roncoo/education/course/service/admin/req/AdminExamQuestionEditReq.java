@@ -18,6 +18,8 @@ public class AdminExamQuestionEditReq implements Serializable {
     private Long id;
     private Long categoryId;
     private Long courseId;
+    /** 所属章节，为空表示不限定章节 */
+    private Long chapterId;
     /** 1单选 2多选 3判断 */
     private Integer questionType;
     private String questionTitle;
