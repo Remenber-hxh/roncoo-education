@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -161,20 +162,54 @@ public class CourseBiz extends BaseBiz {
             // 用户信息
             List<Long> userIds = userCourseCommentPage.getList().stream().map(UserCourseComment::getUserId).collect(Collectors.toList());
             Map<Long, UsersVO> usersVOMap = feignUsers.listByIds(userIds);
-            for (CourseCommentResp commentResp : resp.getList()) {
-                UsersVO usersVO = usersVOMap.get(commentResp.getUserId());
-                usersVO.setMobile(DesensitizedUtil.mobilePhone(usersVO.getMobile()));
-                if (StrUtil.isBlank(usersVO.getNickname())) {
-                    usersVO.setNickname(usersVO.getMobile());
-                }
-                commentResp.setUsersVO(usersVO);
-            }
+            // 回复是挂在顶级评论下面的，只遍历 resp.getList() 会漏掉它们的用户信息，
+            // 界面上回复者就成了空白。这里递归补齐每一层。
+            fillUsers(resp.getList(), usersVOMap);
         }
         return Result.success(resp);
     }
 
+    /**
+     * 逐层填充评论的用户信息。
+     * <p>
+     * 取不到用户时不能直接用返回值调方法——评论人被删除后
+     * usersVOMap.get(userId) 是 null，原来那行 usersVO.setMobile(...)
+     * 会抛空指针，一条脏数据就让整个评论列表打不开。
+     * 这种情况给个占位，让其余评论正常显示。
+     */
+    private void fillUsers(List<CourseCommentResp> list, Map<Long, UsersVO> usersVOMap) {
+        if (CollUtil.isEmpty(list)) {
+            return;
+        }
+        for (CourseCommentResp commentResp : list) {
+            UsersVO usersVO = usersVOMap.get(commentResp.getUserId());
+            if (usersVO == null) {
+                usersVO = new UsersVO();
+                usersVO.setNickname("已注销用户");
+            } else {
+                usersVO.setMobile(DesensitizedUtil.mobilePhone(usersVO.getMobile()));
+                if (StrUtil.isBlank(usersVO.getNickname())) {
+                    usersVO.setNickname(usersVO.getMobile());
+                }
+            }
+            commentResp.setUsersVO(usersVO);
+            fillUsers(commentResp.getCourseCommentRespList(), usersVOMap);
+        }
+    }
+
+    /**
+     * 按父评论ID挑出该层的评论，再递归挂上各自的回复。
+     * <p>
+     * commentId 用 Objects.equals 比较，不能写成 item.getCommentId().equals(...)：
+     * 顶级评论的 comment_id 允许为空（新增接口早期没有赋值，库里已有这样的数据），
+     * 一旦遇到 null 就抛 NullPointerException，整个评论列表接口返回「服务繁忙」，
+     * 一条评论都看不到。
+     * 这里把 null 视同 0，与顶级评论的约定一致。
+     */
     private List<CourseCommentResp> filter(List<UserCourseComment> userCourseComments, Long commentId) {
-        List<UserCourseComment> list = userCourseComments.stream().filter(item -> item.getCommentId().equals(commentId)).collect(Collectors.toList());
+        List<UserCourseComment> list = userCourseComments.stream()
+                .filter(item -> Objects.equals(item.getCommentId() == null ? 0L : item.getCommentId(), commentId))
+                .collect(Collectors.toList());
         if (CollUtil.isNotEmpty(list)) {
             List<CourseCommentResp> resps = BeanUtil.copyProperties(list, CourseCommentResp.class);
             for (CourseCommentResp resp : resps) {

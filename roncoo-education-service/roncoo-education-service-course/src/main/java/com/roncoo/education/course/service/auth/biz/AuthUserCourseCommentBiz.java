@@ -58,6 +58,12 @@ public class AuthUserCourseCommentBiz extends BaseBiz {
     public Result<String> add(AuthUserCourseCommentReq req) {
         UserCourseComment userCourseComment = BeanUtil.copyProperties(req, UserCourseComment.class);
         userCourseComment.setUserId(ThreadContext.userId());
+        // 顶级评论必须显式写 0，不能留 null。
+        // 查询侧是按 comment_id 逐层挑出回复的，约定 0 表示「没有父评论」；
+        // 留成 null 的话那条评论既不属于任何层级、也会让比较逻辑踩空。
+        if (userCourseComment.getCommentId() == null) {
+            userCourseComment.setCommentId(0L);
+        }
         dao.save(userCourseComment);
         return Result.success("评论成功");
     }
