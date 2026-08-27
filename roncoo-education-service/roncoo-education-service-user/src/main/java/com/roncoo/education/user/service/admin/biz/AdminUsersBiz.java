@@ -2,7 +2,9 @@ package com.roncoo.education.user.service.admin.biz;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.DesensitizedUtil;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.crypto.digest.DigestUtil;
 import com.roncoo.education.common.base.page.Page;
 import com.roncoo.education.common.base.page.PageUtil;
 import com.roncoo.education.common.core.base.Result;
@@ -147,10 +149,55 @@ public class AdminUsersBiz extends BaseBiz {
      */
     public Result<String> save(AdminUsersSaveReq req) {
         Users record = BeanUtil.copyProperties(req, Users.class);
+        // 密码必须加盐哈希后再存。
+        // 原来是把表单里的明文直接 copy 进去，而登录时比对的是
+        // sha1(salt + 输入)，两边对不上——后台这样建出来的账号根本登不进去，
+        // 而且明文密码直接躺在库里。
+        if (StringUtils.hasText(req.getMobilePsw())) {
+            record.setMobileSalt(IdUtil.simpleUUID());
+            record.setMobilePsw(DigestUtil.sha1Hex(record.getMobileSalt() + req.getMobilePsw().trim()));
+        } else if (StringUtils.hasText(req.getMobile())) {
+            // 没填密码时给个默认值，与批量导入保持一致：手机号后 6 位
+            String init = defaultPsw(req.getMobile());
+            record.setMobileSalt(IdUtil.simpleUUID());
+            record.setMobilePsw(DigestUtil.sha1Hex(record.getMobileSalt() + init));
+        }
         if (dao.save(record) > 0) {
             return Result.success("操作成功");
         }
         return Result.error("操作失败");
+    }
+
+    /**
+     * 重置登录密码。
+     * <p>
+     * 密码是加盐哈希存的，管理员看不到也找不回，员工忘记密码时
+     * 之前后台完全没有办法处理。重置成手机号后 6 位，
+     * 与批量导入建号时的初始密码规则一致，并把新密码返回给管理员转告。
+     */
+    public Result<String> resetPsw(Long id) {
+        Users user = dao.getById(id);
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+        if (!StringUtils.hasText(user.getMobile()) || user.getMobile().trim().length() < 6) {
+            return Result.error("该账号的手机号不足 6 位，无法按规则生成初始密码，请先补全手机号");
+        }
+        String init = defaultPsw(user.getMobile());
+        Users record = new Users();
+        record.setId(id);
+        record.setMobileSalt(IdUtil.simpleUUID());
+        record.setMobilePsw(DigestUtil.sha1Hex(record.getMobileSalt() + init));
+        if (dao.updateById(record) > 0) {
+            return Result.success(init);
+        }
+        return Result.error("重置失败");
+    }
+
+    /** 初始密码规则：手机号后 6 位 */
+    private static String defaultPsw(String mobile) {
+        String m = mobile.trim();
+        return m.substring(m.length() - 6);
     }
 
     /**

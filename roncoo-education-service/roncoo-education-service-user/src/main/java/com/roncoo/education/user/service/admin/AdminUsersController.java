@@ -79,6 +79,14 @@ public class AdminUsersController {
         return biz.profileEdit(req);
     }
 
+    @Operation(summary = "重置登录密码")
+    @Parameter(name = "id", description = "主键ID", required = true)
+    @SysLog(value = "重置登录密码")
+    @PutMapping(value = "/psw/reset")
+    public Result<String> resetPsw(@RequestParam Long id) {
+        return biz.resetPsw(id);
+    }
+
     @Operation(summary = "下载员工导入模板")
     @GetMapping(value = "/import/template")
     public void importTemplate(HttpServletResponse response) throws IOException {
