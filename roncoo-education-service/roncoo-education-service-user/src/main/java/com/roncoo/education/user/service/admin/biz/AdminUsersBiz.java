@@ -128,12 +128,15 @@ public class AdminUsersBiz extends BaseBiz {
         record.setEmpNo(StringUtils.hasText(empNo) ? empNo : null);
         record.setTeamId(req.getTeamId());
         record.setProjectGroupId(req.getProjectGroupId());
-        record.setPosition(req.getPosition());
+        record.setPosition(StringUtils.hasText(req.getPosition()) ? req.getPosition().trim() : null);
         record.setHireDate(req.getHireDate());
-        if (dao.updateById(record) > 0) {
-            return Result.success("操作成功");
-        }
-        return Result.error("操作失败");
+        // 走 updateProfileById 而不是 updateById：
+        // 后者是选择性更新，管理员把班组/入职日期改回空值时会被跳过（提示成功、库里没变），
+        // 且五个字段全为空时会拼出 "update users where id=?" 直接 SQL 报错。
+        dao.updateProfileById(record);
+        // 不按影响行数判断成败：档案没做任何改动时 MySQL 返回 0 行，
+        // 那不是失败。上面已经确认过用户存在，执行不抛异常即为成功。
+        return Result.success("操作成功");
     }
 
     /**

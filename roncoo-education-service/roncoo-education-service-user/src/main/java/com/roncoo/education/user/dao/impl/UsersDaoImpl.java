@@ -42,6 +42,11 @@ public class UsersDaoImpl extends AbstractBaseJdbc implements UsersDao {
     }
 
     @Override
+    public int updateProfileById(Users record) {
+        return this.usersMapper.updateProfileById(record);
+    }
+
+    @Override
     public Users getById(Long id) {
         return this.usersMapper.selectByPrimaryKey(id);
     }

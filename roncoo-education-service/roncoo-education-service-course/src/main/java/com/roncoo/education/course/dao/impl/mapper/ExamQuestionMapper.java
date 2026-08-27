@@ -69,11 +69,19 @@ public interface ExamQuestionMapper {
 
     /**
      * 按组卷规则随机抽题。
-     * chapterId 传了就只从该章抽，用于「第三章测验」这类章节小测。
+     * <p>
+     * 课程条件写成「属于本课程 或 未绑定课程」，不能只写 course_id=#{courseId}：
+     * 题目并不要求携带 course_id，通用题（安全常识那类）本来就是留空的。
+     * 只按等值过滤的话，试卷绑了课程、题目没绑课程，一道也抽不到——
+     * 冒烟测试卷就是这么被打挂的（4 道题瞬间变 0 道）。
+     * 绑了别的课程的题仍然排除，避免串课。
+     * <p>
+     * chapterId 传了就严格只从该章抽，用于「第三章测验」这类章节小测，
+     * 这里不放通用题，否则章节小测会混进无关题目。
      */
     @Select("<script>select * from exam_question where status_id=1 "
             + "<if test='categoryId != null'>and category_id=#{categoryId}</if>"
-            + "<if test='courseId != null'>and course_id=#{courseId}</if>"
+            + "<if test='courseId != null'>and (course_id=#{courseId} or course_id is null)</if>"
             + "<if test='chapterId != null'>and chapter_id=#{chapterId}</if>"
             + "<if test='questionType != null'>and question_type=#{questionType}</if>"
             + " order by rand() limit #{count}</script>")

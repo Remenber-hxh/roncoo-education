@@ -498,4 +498,23 @@
       project_group_id = #{projectGroupId,jdbcType=BIGINT}
     where id = #{id,jdbcType=BIGINT}
   </update>
+
+  <!--
+    二开手写：员工档案专用更新，五个字段无条件写入。
+    不包 <if> 是有意的——管理员在档案弹窗里看到的是当前值，
+    把某项清空就是「要清掉它」，跳过就成了改不动。
+    同时避免了全为空时 <set> 渲染为空、拼出
+    "update users where id=?" 的 SQL 语法错误。
+    导入(AdminUsersImportBiz)仍走 selective：那边一行里留空的列
+    含义是「本次不改」，不是「清空」。
+  -->
+  <update id="updateProfileById" parameterType="com.roncoo.education.user.dao.impl.mapper.entity.Users">
+    update users
+    set emp_no = #{empNo,jdbcType=VARCHAR},
+    team_id = #{teamId,jdbcType=BIGINT},
+    project_group_id = #{projectGroupId,jdbcType=BIGINT},
+    position = #{position,jdbcType=VARCHAR},
+    hire_date = #{hireDate,jdbcType=DATE}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
 </mapper>

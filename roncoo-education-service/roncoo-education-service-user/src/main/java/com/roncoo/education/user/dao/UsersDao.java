@@ -13,6 +13,12 @@ public interface UsersDao {
 
     int updateById(Users record);
 
+    /**
+     * 只更新员工档案（工号/班组/项目组/岗位/入职日期），且允许把字段改回空值。
+     * 走 updateById 会因为选择性更新而清不掉字段，也会在全空时拼出非法 SQL。
+     */
+    int updateProfileById(Users record);
+
     Users getById(Long id);
 
     Page<Users> page(int pageCurrent, int pageSize, UsersExample example);
