@@ -3,6 +3,7 @@ package com.roncoo.education.user.service.auth;
 import com.roncoo.education.common.core.base.Result;
 import com.roncoo.education.user.service.auth.biz.AuthUsersBiz;
 import com.roncoo.education.user.service.auth.req.AuthBindingReq;
+import com.roncoo.education.user.service.auth.req.AuthUsersHeadReq;
 import com.roncoo.education.user.service.auth.req.AuthUsersReq;
 import com.roncoo.education.user.service.auth.resp.AuthUsersResp;
 import io.swagger.v3.oas.annotations.Operation;
@@ -41,6 +42,12 @@ public class AuthUsersController {
     @PostMapping(value = "/edit")
     public Result<String> update(@RequestBody @Valid AuthUsersReq req) {
         return biz.update(req);
+    }
+
+    @Operation(summary = "更新头像", description = "只更新当前用户的头像")
+    @PostMapping(value = "/head")
+    public Result<String> updateHead(@RequestBody AuthUsersHeadReq req) {
+        return biz.updateHead(req);
     }
 
     @Operation(summary = "绑定接口", description = "绑定微信")

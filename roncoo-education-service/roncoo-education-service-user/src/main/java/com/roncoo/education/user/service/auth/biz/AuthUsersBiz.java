@@ -12,6 +12,7 @@ import com.roncoo.education.system.feign.interfaces.vo.LoginConfig;
 import com.roncoo.education.user.dao.UsersDao;
 import com.roncoo.education.user.dao.impl.mapper.entity.Users;
 import com.roncoo.education.user.service.auth.req.AuthBindingReq;
+import com.roncoo.education.user.service.auth.req.AuthUsersHeadReq;
 import com.roncoo.education.user.service.auth.req.AuthUsersReq;
 import com.roncoo.education.user.service.auth.resp.AuthUsersResp;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,25 @@ public class AuthUsersBiz extends BaseBiz {
             return Result.success(BeanUtil.copyProperties(users, AuthUsersResp.class));
         }
         return Result.error("用户不存在或被禁用");
+    }
+
+    /**
+     * 只更新头像。
+     * <p>
+     * 不走 update(AuthUsersReq)：那个入参要求昵称、性别、生日都非空，
+     * 员工只是想换张头像，却会因为没填过生日被打回。
+     */
+    public Result<String> updateHead(AuthUsersHeadReq req) {
+        if (!StringUtils.hasText(req.getUserHead())) {
+            return Result.error("头像地址不能为空");
+        }
+        Users record = new Users();
+        record.setId(ThreadContext.userId());
+        record.setUserHead(req.getUserHead().trim());
+        if (dao.updateById(record) > 0) {
+            return Result.success("操作成功");
+        }
+        return Result.error("操作失败");
     }
 
     public Result<String> update(AuthUsersReq req) {
