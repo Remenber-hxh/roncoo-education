@@ -28,6 +28,7 @@ import com.roncoo.education.course.service.admin.resp.AdminLiveViewResp;
 import com.roncoo.education.course.service.admin.resp.AdminResourceViewResp;
 import com.roncoo.education.user.feign.interfaces.IFeignLecturer;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -123,6 +124,7 @@ public class AdminCourseChapterPeriodBiz extends BaseBiz {
      * @return 添加结果
      */
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "course", allEntries = true)
     public Result<String> save(AdminCourseChapterPeriodSaveReq req) {
         int maxSort = 0;
         List<CourseChapterPeriod> periodList = dao.listByChapterId(req.getChapterId());
@@ -175,6 +177,7 @@ public class AdminCourseChapterPeriodBiz extends BaseBiz {
      * @return 修改结果
      */
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "course", allEntries = true)
     public Result<String> edit(AdminCourseChapterPeriodEditReq req) {
         CourseChapterPeriod record = BeanUtil.copyProperties(req, CourseChapterPeriod.class);
 
@@ -199,6 +202,7 @@ public class AdminCourseChapterPeriodBiz extends BaseBiz {
      * @return 删除结果
      */
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "course", allEntries = true)
     public Result<String> delete(Long id) {
         if (dao.deleteById(id) > 0) {
             // 删除课时，也需要删除对应的学习记录，否则统计进度出现数据异常

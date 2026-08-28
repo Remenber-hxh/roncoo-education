@@ -21,6 +21,7 @@ import com.roncoo.education.course.service.admin.resp.AdminCourseChapterPeriodVi
 import com.roncoo.education.course.service.admin.resp.AdminCourseChapterViewResp;
 import com.roncoo.education.course.service.admin.resp.AdminResourceViewResp;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -101,6 +102,7 @@ public class AdminCourseChapterBiz extends BaseBiz {
      * @param req 章节信息
      * @return 添加结果
      */
+    @CacheEvict(cacheNames = "course", allEntries = true)
     public Result<String> save(AdminCourseChapterSaveReq req) {
         int maxSort = 0;
         List<CourseChapter> chapterList = dao.listByCourseId(req.getCourseId());
@@ -135,6 +137,7 @@ public class AdminCourseChapterBiz extends BaseBiz {
      * @param req 章节信息修改对象
      * @return 修改结果
      */
+    @CacheEvict(cacheNames = "course", allEntries = true)
     public Result<String> edit(AdminCourseChapterEditReq req) {
         CourseChapter record = BeanUtil.copyProperties(req, CourseChapter.class);
         if (dao.updateById(record) > 0) {
@@ -150,6 +153,7 @@ public class AdminCourseChapterBiz extends BaseBiz {
      * @return 删除结果
      */
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "course", allEntries = true)
     public Result<String> delete(Long id) {
         List<CourseChapterPeriod> periodList = courseChapterPeriodDao.listByChapterId(id);
         if (CollUtil.isNotEmpty(periodList) && periodList.size() > 0) {
@@ -161,6 +165,7 @@ public class AdminCourseChapterBiz extends BaseBiz {
         return Result.error("操作失败");
     }
 
+    @CacheEvict(cacheNames = "course", allEntries = true)
     public Result<String> sort(List<AdminCourseChapterSortReq> req) {
         dao.updateSortForBatch(BeanUtil.copyProperties(req, CourseChapter.class));
         return Result.success("操作成功");

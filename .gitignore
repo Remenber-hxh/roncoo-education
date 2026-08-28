@@ -9,3 +9,6 @@
 *.iml
 *.idea
 **.iml
+
+# 本地运行日志
+logs/

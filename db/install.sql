@@ -47,6 +47,10 @@ SOURCE w2_team_menu.sql;
 SOURCE w2_project_group_menu.sql;
 SOURCE w3_user_delete_permission.sql;
 
+-- ============ 三点五、业务基础数据 ============
+-- 六大培训模块的课程分类。课程、题库都要归到这些模块下，属于必装项。
+SOURCE w3_course_category.sql;
+
 -- ============ 四、演示数据（生产环境可跳过）============
 -- SOURCE seed_demo.sql;
 -- SOURCE seed_homepage.sql;
@@ -59,6 +63,7 @@ SELECT '表数量' AS 检查项, COUNT(*) AS 值 FROM information_schema.tables 
 UNION ALL SELECT '后台菜单', COUNT(*) FROM sys_menu WHERE menu_type IN (1,2)
 UNION ALL SELECT '按钮权限', COUNT(*) FROM sys_menu WHERE menu_type = 3
 UNION ALL SELECT '班组字典', COUNT(*) FROM team
+UNION ALL SELECT '一级课程分类', COUNT(*) FROM category WHERE category_type = 1 AND parent_id = 0
 UNION ALL SELECT '证书类型', COUNT(*) FROM certificate_type
 UNION ALL SELECT '管理员账号', COUNT(*) FROM sys_user;
 

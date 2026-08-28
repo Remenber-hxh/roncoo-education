@@ -15,6 +15,7 @@ import com.roncoo.education.user.service.admin.req.AdminLecturerSaveReq;
 import com.roncoo.education.user.service.admin.resp.AdminLecturerPageResp;
 import com.roncoo.education.user.service.admin.resp.AdminLecturerViewResp;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -56,6 +57,7 @@ public class AdminLecturerBiz extends BaseBiz {
      * @param req 讲师信息
      * @return 添加结果
      */
+    @CacheEvict(cacheNames = "user", allEntries = true)
     public Result<String> save(AdminLecturerSaveReq req) {
         Lecturer record = BeanUtil.copyProperties(req, Lecturer.class);
         if (dao.save(record) > 0) {
@@ -80,6 +82,7 @@ public class AdminLecturerBiz extends BaseBiz {
      * @param req 讲师信息修改对象
      * @return 修改结果
      */
+    @CacheEvict(cacheNames = "user", allEntries = true)
     public Result<String> edit(AdminLecturerEditReq req) {
         Lecturer record = BeanUtil.copyProperties(req, Lecturer.class);
         if (dao.updateById(record) > 0) {
@@ -94,6 +97,7 @@ public class AdminLecturerBiz extends BaseBiz {
      * @param id ID主键
      * @return 删除结果
      */
+    @CacheEvict(cacheNames = "user", allEntries = true)
     public Result<String> delete(Long id) {
         if (dao.deleteById(id) > 0) {
             return Result.success("操作成功");

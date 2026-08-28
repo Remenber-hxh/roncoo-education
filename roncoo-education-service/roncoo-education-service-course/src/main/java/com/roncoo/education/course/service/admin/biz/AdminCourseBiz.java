@@ -23,6 +23,7 @@ import com.roncoo.education.course.service.admin.resp.AdminCoursePageResp;
 import com.roncoo.education.course.service.admin.resp.AdminCourseViewResp;
 import com.roncoo.education.user.feign.interfaces.IFeignLecturer;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -91,6 +92,7 @@ public class AdminCourseBiz extends BaseBiz {
      * @param req 课程信息
      * @return 添加结果
      */
+    @CacheEvict(cacheNames = "course", allEntries = true)
     public Result<String> save(AdminCourseSaveReq req) {
         Course record = BeanUtil.copyProperties(req, Course.class);
         if (dao.save(record) > 0) {
@@ -125,6 +127,7 @@ public class AdminCourseBiz extends BaseBiz {
      * @param req 课程信息修改对象
      * @return 修改结果
      */
+    @CacheEvict(cacheNames = "course", allEntries = true)
     public Result<String> edit(AdminCourseEditReq req) {
         Course record = BeanUtil.copyProperties(req, Course.class);
         if (dao.updateById(record) > 0) {
@@ -140,6 +143,7 @@ public class AdminCourseBiz extends BaseBiz {
      * @return 删除结果
      */
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "course", allEntries = true)
     public Result<String> delete(Long id) {
         // 删除节信息
         courseChapterPeriodDao.deleteByCourseId(id);

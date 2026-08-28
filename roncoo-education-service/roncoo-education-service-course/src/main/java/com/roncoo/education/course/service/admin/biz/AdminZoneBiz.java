@@ -15,6 +15,7 @@ import com.roncoo.education.course.service.admin.req.AdminZoneSaveReq;
 import com.roncoo.education.course.service.admin.resp.AdminZonePageResp;
 import com.roncoo.education.course.service.admin.resp.AdminZoneViewResp;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -56,6 +57,7 @@ public class AdminZoneBiz extends BaseBiz {
      * @param req 专区
      * @return 添加结果
      */
+    @CacheEvict(cacheNames = "course", allEntries = true)
     public Result<String> save(AdminZoneSaveReq req) {
         Zone record = BeanUtil.copyProperties(req, Zone.class);
         if (dao.save(record) > 0) {
@@ -80,6 +82,7 @@ public class AdminZoneBiz extends BaseBiz {
      * @param req 专区修改对象
      * @return 修改结果
      */
+    @CacheEvict(cacheNames = "course", allEntries = true)
     public Result<String> edit(AdminZoneEditReq req) {
         Zone record = BeanUtil.copyProperties(req, Zone.class);
         if (dao.updateById(record) > 0) {
@@ -94,6 +97,7 @@ public class AdminZoneBiz extends BaseBiz {
      * @param id ID主键
      * @return 删除结果
      */
+    @CacheEvict(cacheNames = "course", allEntries = true)
     public Result<String> delete(Long id) {
         if (dao.deleteById(id) > 0) {
             return Result.success("操作成功");
