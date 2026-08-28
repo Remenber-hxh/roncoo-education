@@ -7,12 +7,20 @@ import com.roncoo.education.course.dao.impl.mapper.entity.ExamQuestion;
 import com.roncoo.education.course.dao.impl.mapper.entity.ExamRecord;
 import com.roncoo.education.course.dao.impl.mapper.entity.UserCourseAssign;
 import com.roncoo.education.course.service.admin.biz.AdminExamBiz;
+import com.roncoo.education.course.service.admin.biz.AdminExamQuestionImportBiz;
 import com.roncoo.education.course.service.admin.req.*;
 import com.roncoo.education.course.service.admin.resp.AdminExamPaperViewResp;
+import com.roncoo.education.course.service.admin.resp.AdminExamQuestionImportResp;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 /**
  * 考试管理接口（二开）
@@ -24,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminExamController {
 
     private final AdminExamBiz biz;
+    private final AdminExamQuestionImportBiz importBiz;
 
     // ===== 题库 =====
 
@@ -61,6 +70,41 @@ public class AdminExamController {
     @GetMapping("/question/view")
     public Result<ExamQuestion> questionView(@RequestParam Long id) {
         return biz.questionView(id);
+    }
+
+    // ===== 题库导入导出 =====
+    // 导出的文件就是导入模板，出题人导出改完直接导回来，不用在两种格式之间转换
+
+    @Operation(summary = "导出题目(按当前筛选条件)")
+    @GetMapping("/question/export")
+    public void questionExport(AdminExamQuestionPageReq req, HttpServletResponse response) throws IOException {
+        writeXlsxHeader(response, "题库导出");
+        importBiz.export(req, response.getOutputStream());
+    }
+
+    @Operation(summary = "下载题库导入模板")
+    @GetMapping("/question/import/template")
+    public void questionImportTemplate(HttpServletResponse response) throws IOException {
+        writeXlsxHeader(response, "题库导入模板");
+        importBiz.writeTemplate(response.getOutputStream());
+    }
+
+    @Operation(summary = "批量导入题目")
+    @PostMapping("/question/import")
+    public Result<AdminExamQuestionImportResp> questionImport(@RequestParam(value = "file", required = false) MultipartFile file) {
+        return importBiz.importQuestions(file);
+    }
+
+    /**
+     * 文件名用 RFC 5987 的 filename* 传，不能直接塞进 filename=。
+     * 中文文件名在 header 里必须是 URL 编码的，否则浏览器存下来是一串乱码。
+     * URLEncoder 会把空格编成 +，而 + 在这里不会被还原成空格，所以再换成 %20。
+     */
+    private static void writeXlsxHeader(HttpServletResponse response, String fileName) {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setCharacterEncoding("utf-8");
+        String encoded = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
+        response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + encoded + ".xlsx");
     }
 
     // ===== 试卷 =====

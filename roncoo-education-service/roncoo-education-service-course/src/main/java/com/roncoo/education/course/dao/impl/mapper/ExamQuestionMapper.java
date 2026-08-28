@@ -39,6 +39,33 @@ public interface ExamQuestionMapper {
             + "</set> where id=#{id}</script>")
     int updateById(ExamQuestion record);
 
+    /**
+     * 整条覆盖，每一列都无条件写入，专供批量导入使用。
+     * <p>
+     * 不能复用上面的 updateById：它给多数列包了 &lt;if test='xx != null'&gt;，
+     * 语义是「没传的字段保持原样」，这对表单是对的（表单只提交填了的项），
+     * 对导入却正好相反——导入是「文件里是什么，库里就该是什么」。
+     * 出题人从库里导出、把某道题的「所属课程」清空再导回来，
+     * 期望这道题变成通用题；走 updateById 那一列会被直接跳过，
+     * 界面上看着改了、实际没变，而且没有任何报错。
+     * <p>
+     * 代价是调用方必须传完整记录。目前只有 AdminExamQuestionImportBiz 调用，
+     * 它对每一列都做了解析和默认值处理，满足这个前提。
+     */
+    @Update("update exam_question set "
+            + "status_id=#{statusId}, sort=#{sort}, category_id=#{categoryId}, course_id=#{courseId}, "
+            + "chapter_id=#{chapterId}, question_type=#{questionType}, question_title=#{questionTitle}, "
+            + "options_json=#{optionsJson}, correct_answer=#{correctAnswer}, analysis=#{analysis}, "
+            + "difficulty=#{difficulty} where id=#{id}")
+    int updateAllById(ExamQuestion record);
+
+    /**
+     * 只取查重需要的三列。导入时要判断「题库里是不是已经有一模一样的题干」，
+     * 用 select * 会把几千道题的题干、选项、解析全拉进内存，没必要。
+     */
+    @Select("select id, course_id, question_title from exam_question")
+    List<ExamQuestion> listTitles();
+
     @Delete("delete from exam_question where id=#{id}")
     int deleteById(@Param("id") Long id);
 

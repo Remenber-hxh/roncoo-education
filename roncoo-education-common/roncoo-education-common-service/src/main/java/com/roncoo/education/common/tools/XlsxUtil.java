@@ -1,4 +1,4 @@
-package com.roncoo.education.user.util;
+package com.roncoo.education.common.tools;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
