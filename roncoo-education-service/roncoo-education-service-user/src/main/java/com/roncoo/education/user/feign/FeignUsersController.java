@@ -3,6 +3,7 @@ package com.roncoo.education.user.feign;
 import com.roncoo.education.common.base.BaseController;
 import com.roncoo.education.user.feign.biz.FeignUsersBiz;
 import com.roncoo.education.user.feign.interfaces.IFeignUsers;
+import com.roncoo.education.user.feign.interfaces.vo.UserRosterVO;
 import com.roncoo.education.user.feign.interfaces.vo.UsersVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -48,5 +49,10 @@ public class FeignUsersController extends BaseController implements IFeignUsers 
     @Override
     public Map<Long, UsersVO> listByIds(@RequestBody List<Long> userIdList) {
         return biz.listByIds(userIdList);
+    }
+
+    @Override
+    public List<UserRosterVO> roster() {
+        return biz.roster();
     }
 }

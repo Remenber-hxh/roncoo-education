@@ -12,6 +12,7 @@ import com.roncoo.education.course.dao.impl.mapper.UserAgreementSignMapper;
 import com.roncoo.education.course.dao.impl.mapper.entity.CourseChapterPeriod;
 import com.roncoo.education.course.dao.impl.mapper.entity.UserStudy;
 import com.roncoo.education.course.service.auth.req.AuthArticleReadReq;
+import com.roncoo.education.course.service.biz.AssignStatusBiz;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -43,6 +44,9 @@ public class AuthArticleBiz extends BaseBiz {
 
     @NotNull
     private final UserAgreementSignMapper agreementSignMapper;
+
+    @NotNull
+    private final AssignStatusBiz assignStatusBiz;
 
     /**
      * 上报阅读进度
@@ -87,6 +91,7 @@ public class AuthArticleBiz extends BaseBiz {
         userStudy.setCurrentDuration(totalStay);
         userStudy.setCurrentPage(1);
         userStudyDao.updateById(userStudy);
+        assignStatusBiz.refresh(userId, userStudy.getCourseId());
 
         return Result.success(newProgress.intValue() >= 100 ? "COMPLETE" : "OK");
     }

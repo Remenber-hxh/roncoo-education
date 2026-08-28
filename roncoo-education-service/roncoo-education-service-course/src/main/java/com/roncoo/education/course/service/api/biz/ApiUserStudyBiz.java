@@ -12,6 +12,7 @@ import com.roncoo.education.course.dao.UserStudyDao;
 import com.roncoo.education.course.dao.impl.mapper.entity.Resource;
 import com.roncoo.education.course.dao.impl.mapper.entity.UserStudy;
 import com.roncoo.education.course.service.auth.req.AuthUserStudyReq;
+import com.roncoo.education.course.service.biz.AssignStatusBiz;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -33,6 +34,8 @@ public class ApiUserStudyBiz extends BaseBiz {
     private final UserStudyDao dao;
     @NotNull
     private final ResourceDao resourceDao;
+    @NotNull
+    private final AssignStatusBiz assignStatusBiz;
 
     public Result<String> study(AuthUserStudyReq req) {
         // 资源信息
@@ -84,6 +87,7 @@ public class ApiUserStudyBiz extends BaseBiz {
         userStudy.setProgress(req.getCurrentDuration().divide(new BigDecimal(req.getTotalDuration()), RoundingMode.CEILING).multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP));
         // 更新观看记录
         dao.updateById(userStudy);
+        assignStatusBiz.refresh(userStudy.getUserId(), userStudy.getCourseId());
 
         // 更新缓存，当重新开始学习的记录该进度
         cacheRedis.set(Constants.RedisPre.PROGRESS + req.getStudyId(), req, 1, TimeUnit.DAYS);
@@ -106,6 +110,7 @@ public class ApiUserStudyBiz extends BaseBiz {
         userStudy.setProgress(BigDecimal.valueOf(100));
         // 更新观看记录
         dao.updateById(userStudy);
+        assignStatusBiz.refresh(userStudy.getUserId(), userStudy.getCourseId());
         // 清空缓存
         cacheRedis.delete(Constants.RedisPre.USER_STUDY + req.getStudyId());
         cacheRedis.delete(Constants.RedisPre.PROGRESS + req.getStudyId());

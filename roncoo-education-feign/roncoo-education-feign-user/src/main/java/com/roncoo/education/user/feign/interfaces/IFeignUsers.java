@@ -1,5 +1,6 @@
 package com.roncoo.education.user.feign.interfaces;
 
+import com.roncoo.education.user.feign.interfaces.vo.UserRosterVO;
 import com.roncoo.education.user.feign.interfaces.vo.UsersVO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,4 +54,16 @@ public interface IFeignUsers {
      */
     @PostMapping(value = "/listByIds")
     Map<Long, UsersVO> listByIds(@RequestBody List<Long> userIdList);
+
+    /**
+     * 全部启用员工的花名册（含班组、项目组归属）。
+     * <p>
+     * 供 course 服务做学习统计时按班组/项目组归组用——学习记录在 course 服务，
+     * 员工归属在 user 服务，只能整份取过去再本地归组。
+     * 公司规模是几十人量级，一次全量取回没有分页的必要。
+     *
+     * @return 花名册
+     */
+    @GetMapping(value = "/roster")
+    List<UserRosterVO> roster();
 }

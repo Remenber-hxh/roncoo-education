@@ -20,6 +20,9 @@ SOURCE w1_profile_and_study.sql;
 SOURCE w2_project_group.sql;
 SOURCE w3_question_chapter.sql;
 SOURCE fix_comment_parent_id.sql;
+-- 按实际学习进度归正课程指派的完成状态。全新安装时无数据可修，
+-- 但保留在流程里，从旧库升级时才不会漏掉
+SOURCE w3_fix_assign_finish_status.sql;
 SOURCE w2_team_seed.sql;
 
 -- 补齐反向重建时丢失的字段默认值。
@@ -46,6 +49,7 @@ SOURCE fix_missing_routes.sql;
 SOURCE w2_team_menu.sql;
 SOURCE w2_project_group_menu.sql;
 SOURCE w3_user_delete_permission.sql;
+SOURCE w3_stat_menu.sql;
 
 -- ============ 三点五、业务基础数据 ============
 -- 六大培训模块的课程分类。课程、题库都要归到这些模块下，属于必装项。
