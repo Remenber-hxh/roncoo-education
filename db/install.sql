@@ -51,6 +51,9 @@ SOURCE w2_project_group_menu.sql;
 SOURCE w3_user_delete_permission.sql;
 SOURCE w3_stat_menu.sql;
 
+-- 站内消息（逾期催办）+ 催办按钮权限
+SOURCE w4_notice.sql;
+
 -- ============ 三点五、业务基础数据 ============
 -- 六大培训模块的课程分类。课程、题库都要归到这些模块下，属于必装项。
 SOURCE w3_course_category.sql;

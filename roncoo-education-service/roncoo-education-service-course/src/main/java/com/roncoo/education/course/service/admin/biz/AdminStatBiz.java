@@ -160,9 +160,7 @@ public class AdminStatBiz {
             int need = periodCount.getOrDefault(a.getCourseId(), 0);
             int done = doneMap.getOrDefault(k, 0);
             int touched = touchedMap.getOrDefault(k, 0);
-            // 课程一个已发布课时都没有时不能算完成——否则空课程会让完成率虚高到 100%，
-            // 而员工其实什么都没学到
-            boolean finished = need > 0 && done >= need;
+            boolean finished = isFinished(need, done);
             boolean started = touched > 0;
             int progress = need > 0 ? Math.min(100, done * 100 / need) : 0;
 
@@ -190,7 +188,7 @@ public class AdminStatBiz {
                 requiredDone++;
             }
 
-            boolean overdue = !finished && a.getDeadline() != null && toLocalDate(a.getDeadline()).isBefore(today);
+            boolean overdue = isOverdue(finished, a.getDeadline(), today);
             if (overdue) {
                 overdueCount++;
                 if (overdueList.size() < MAX_OVERDUE_ROWS) {
@@ -252,6 +250,26 @@ public class AdminStatBiz {
         resp.setOverdueList(overdueList);
 
         return Result.success(resp);
+    }
+
+    /**
+     * 一门课是否算学完。
+     * <p>
+     * 课程一个已发布课时都没有时不能算完成——否则空课程会让完成率虚高到 100%，
+     * 而员工其实什么都没学到。
+     * <p>
+     * 催办（{@link AdminRemindBiz}）要用同一套判定，所以放在这里共用：
+     * 两处各写一遍，迟早会出现「看板说逾期、催办说不逾期」。
+     */
+    static boolean isFinished(int need, int done) {
+        return need > 0 && done >= need;
+    }
+
+    /**
+     * 是否逾期未完成。只有设了截止日期且已过期、且没学完才算。
+     */
+    static boolean isOverdue(boolean finished, java.util.Date deadline, LocalDate today) {
+        return !finished && deadline != null && toLocalDate(deadline).isBefore(today);
     }
 
     private static void accumulate(Map<String, AdminStatOverviewResp.GroupStat> map, String name,
