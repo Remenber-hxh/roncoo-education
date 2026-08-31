@@ -1,5 +1,8 @@
 package com.roncoo.education.course.service.admin.biz;
 
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.roncoo.education.common.core.base.Result;
 import com.roncoo.education.common.tools.IdWorker;
 import com.roncoo.education.common.tools.XlsxUtil;
@@ -25,6 +28,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -119,12 +123,15 @@ public class AdminExamQuestionImportBiz {
         row.add(typeName(q.getQuestionType()));
         row.add(nvl(q.getQuestionTitle()));
 
-        List<String> opts = parseOptionsJson(q.getOptionsJson());
+        Map<String, String> options = parseOptions(q.getOptionsJson());
+        List<String> opts = new ArrayList<>(options.values());
         for (int i = 0; i < MAX_OPTIONS; i++) {
             row.add(i < opts.size() ? opts.get(i) : "");
         }
 
-        row.add(answerToText(q.getCorrectAnswer(), q.getQuestionType()));
+        // 选项按 A、B、C… 依次落列，答案也要跟着挪：
+        // 库里键不连续（比如只有 B、D）时，答案「D」在文件里必须变成「B」
+        row.add(answerToText(remapAnswer(q.getCorrectAnswer(), options), q.getQuestionType()));
         row.add(nvl(q.getAnalysis()));
         row.add(difficultyName(q.getDifficulty()));
         row.add(q.getCategoryId() == null ? "" : nvl(dict.categoryNameById.get(q.getCategoryId())));
@@ -137,111 +144,86 @@ public class AdminExamQuestionImportBiz {
     /**
      * 解析入库的选项 JSON，返回按 A、B、C…顺序排好的选项文本。
      * <p>
-     * 手写解析而不是引 JSON 库：这里的结构固定为 [{"key":"A","value":"..."}]，
-     * 且导出不能因为某道题的选项是脏数据就整批失败——解析不出来就当没有选项，
-     * 让人在导出的文件里一眼看到这道题选项是空的，比抛异常有用。
+     * 曾经为了「结构固定、不想引库」手写过一版解析，按第一个 } 切分对象，
+     * 结果选项文本里只要出现花括号就被从那里截断：
+     * 「公式{x+y}的值」导出成「公式{x+y」，再导回去就把截断后的值写进了库，
+     * 全程没有任何报错。现在改用 Hutool 的 JSON 解析。
      */
     static List<String> parseOptionsJson(String json) {
-        List<String> result = new ArrayList<>();
+        return new ArrayList<>(parseOptions(json).values());
+    }
+
+    /**
+     * 解析选项，返回「原始键 -&gt; 选项文本」，按 A、B、C… 顺序排列。
+     * <p>
+     * 保留原始键是为了导出时能把答案重新映射：库里存的键可能不连续
+     * （例如只有 B 和 D），而导出文件的选项列是从 A 开始依次填的，
+     * 不改答案的话「D」就指向了空列，导回来必然报错。
+     */
+    private static Map<String, String> parseOptions(String json) {
+        Map<String, String> ordered = new LinkedHashMap<>();
         if (!StringUtils.hasText(json)) {
-            return result;
+            return ordered;
         }
         try {
             Map<String, String> byKey = new HashMap<>();
-            int i = 0;
-            while (i < json.length()) {
-                int objStart = json.indexOf('{', i);
-                if (objStart < 0) {
-                    break;
+            for (Object item : JSONUtil.parseArray(json)) {
+                if (!(item instanceof JSONObject obj)) {
+                    continue;
                 }
-                int objEnd = json.indexOf('}', objStart);
-                if (objEnd < 0) {
-                    break;
+                String key = obj.getStr("key");
+                if (!StringUtils.hasText(key)) {
+                    continue;
                 }
-                String obj = json.substring(objStart, objEnd);
-                String key = jsonField(obj, "key");
-                String value = jsonField(obj, "value");
-                if (key != null) {
-                    byKey.put(key.trim().toUpperCase(), value == null ? "" : value);
-                }
-                i = objEnd + 1;
+                byKey.put(key.trim().toUpperCase(), obj.getStr("value", ""));
             }
             for (String k : OPTION_KEYS) {
                 if (byKey.containsKey(k)) {
-                    result.add(byKey.get(k));
+                    ordered.put(k, byKey.get(k));
                 }
             }
         } catch (Exception e) {
-            return new ArrayList<>();
+            // 脏数据不该让整批导出失败——解析不出来就当没有选项，
+            // 在导出的文件里一眼能看到这道题选项是空的，比抛异常有用
+            return new LinkedHashMap<>();
         }
-        return result;
+        return ordered;
     }
 
-    /** 从 {"key":"A","value":"甲"} 这样的片段里取一个字段，处理 \" 转义 */
-    private static String jsonField(String obj, String field) {
-        String needle = "\"" + field + "\"";
-        int p = obj.indexOf(needle);
-        if (p < 0) {
-            return null;
+    /**
+     * 把答案里的字母按「原始键 -&gt; 导出后的列」重新映射。
+     * 原始键连续（A、B、C…）时映射是恒等的，等于什么也没做。
+     */
+    private static String remapAnswer(String answer, Map<String, String> options) {
+        if (!StringUtils.hasText(answer)) {
+            return answer;
         }
-        int colon = obj.indexOf(':', p + needle.length());
-        if (colon < 0) {
-            return null;
-        }
-        int q1 = obj.indexOf('"', colon + 1);
-        if (q1 < 0) {
-            return null;
+        List<String> keys = new ArrayList<>(options.keySet());
+        Map<String, String> remap = new HashMap<>();
+        for (int i = 0; i < keys.size() && i < OPTION_KEYS.length; i++) {
+            remap.put(keys.get(i), OPTION_KEYS[i]);
         }
         StringBuilder sb = new StringBuilder();
-        for (int i = q1 + 1; i < obj.length(); i++) {
-            char c = obj.charAt(i);
-            if (c == '\\' && i + 1 < obj.length()) {
-                char n = obj.charAt(++i);
-                switch (n) {
-                    case 'n' -> sb.append('\n');
-                    case 't' -> sb.append('\t');
-                    case 'r' -> sb.append('\r');
-                    default -> sb.append(n);
-                }
-            } else if (c == '"') {
-                return sb.toString();
-            } else {
-                sb.append(c);
+        for (String part : answer.split(",")) {
+            String p = part.trim().toUpperCase();
+            if (p.isEmpty()) {
+                continue;
             }
+            if (sb.length() > 0) {
+                sb.append(',');
+            }
+            // 映射不到就原样留着（判断题的「正确/错误」等非字母答案走这里）
+            sb.append(remap.getOrDefault(p, p));
         }
         return sb.toString();
     }
 
     private static String toOptionsJson(List<String> values) {
-        StringBuilder sb = new StringBuilder("[");
+        JSONArray arr = new JSONArray();
         for (int i = 0; i < values.size(); i++) {
-            if (i > 0) {
-                sb.append(',');
-            }
-            sb.append("{\"key\":\"").append(OPTION_KEYS[i]).append("\",\"value\":\"")
-                    .append(escapeJson(values.get(i))).append("\"}");
+            arr.add(new JSONObject().set("key", OPTION_KEYS[i]).set("value", values.get(i)));
         }
-        return sb.append(']').toString();
-    }
-
-    private static String escapeJson(String s) {
-        StringBuilder sb = new StringBuilder(s.length() + 8);
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            switch (c) {
-                case '"' -> sb.append("\\\"");
-                case '\\' -> sb.append("\\\\");
-                case '\n' -> sb.append("\\n");
-                case '\r' -> sb.append("\\r");
-                case '\t' -> sb.append("\\t");
-                default -> {
-                    if (c >= 0x20) {
-                        sb.append(c);
-                    }
-                }
-            }
-        }
-        return sb.toString();
+        return arr.toString();
     }
 
     // ==================== 模板 ====================

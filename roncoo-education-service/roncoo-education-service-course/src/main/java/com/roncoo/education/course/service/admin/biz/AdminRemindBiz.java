@@ -100,6 +100,13 @@ public class AdminRemindBiz {
             doneMap.put(key(toLong(row.get("userId")), toLong(row.get("courseId"))), toInt(row.get("doneCount")));
         }
 
+        // 考试通过即算完成，必须和看板用同一套判定，
+        // 否则会出现「看板不显示逾期，催办却把人催了」
+        Set<String> passedSet = new HashSet<>();
+        for (Map<String, Object> row : statMapper.passedByUserCourse()) {
+            passedSet.add(key(toLong(row.get("userId")), toLong(row.get("courseId"))));
+        }
+
         // 前端指定催办时，只处理这批；催办全部时不设过滤
         Set<String> wanted = null;
         if (!all) {
@@ -127,7 +134,7 @@ public class AdminRemindBiz {
             UserRosterVO user = userMap.get(a.getUserId());
             boolean required = ASSIGN_REQUIRED == (a.getAssignType() == null ? ASSIGN_REQUIRED : a.getAssignType());
             boolean finished = AdminStatBiz.isFinished(
-                    periodCount.getOrDefault(a.getCourseId(), 0), doneMap.getOrDefault(k, 0));
+                    periodCount.getOrDefault(a.getCourseId(), 0), doneMap.getOrDefault(k, 0), passedSet.contains(k));
 
             if (user == null || !required || !AdminStatBiz.isOverdue(finished, a.getDeadline(), today)) {
                 // 员工已停用、是选修、或已经不逾期了：都不该发催办

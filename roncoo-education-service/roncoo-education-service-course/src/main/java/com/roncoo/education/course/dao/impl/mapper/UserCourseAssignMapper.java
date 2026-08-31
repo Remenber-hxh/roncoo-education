@@ -25,7 +25,19 @@ public interface UserCourseAssignMapper {
             + "where a.user_id=#{userId} and a.status_id=1 order by a.assign_type, a.id desc")
     List<UserCourseAssign> listByUserId(@Param("userId") Long userId);
 
-    @Update("update user_course_assign set finish_status=#{finishStatus}, finish_time=now() where user_id=#{userId} and course_id=#{courseId}")
+    /**
+     * 更新完成状态。
+     * <p>
+     * finish_time 只在真正完成（2已学完 / 3已通过考试）时写入，未完成时置空。
+     * 原来无条件写 now()，结果状态刚变成「学习中」就带上了完成时间，
+     * 将来出「完成时间」报表会把开始学的时间当成学完的时间。
+     */
+    @Update("<script>update user_course_assign set finish_status=#{finishStatus}, "
+            + "<choose>"
+            + "<when test='finishStatus != null and finishStatus &gt;= 2'>finish_time=now()</when>"
+            + "<otherwise>finish_time=null</otherwise>"
+            + "</choose>"
+            + " where user_id=#{userId} and course_id=#{courseId}</script>")
     int updateFinish(@Param("userId") Long userId, @Param("courseId") Long courseId, @Param("finishStatus") Integer finishStatus);
 
     @Select("<script>select * from user_course_assign <where>"

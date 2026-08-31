@@ -160,9 +160,10 @@ public class AdminStatBiz {
             int need = periodCount.getOrDefault(a.getCourseId(), 0);
             int done = doneMap.getOrDefault(k, 0);
             int touched = touchedMap.getOrDefault(k, 0);
-            boolean finished = isFinished(need, done);
-            boolean started = touched > 0;
-            int progress = need > 0 ? Math.min(100, done * 100 / need) : 0;
+            boolean passed = passedSet.contains(k);
+            boolean finished = isFinished(need, done, passed);
+            boolean started = touched > 0 || passed;
+            int progress = passed ? 100 : (need > 0 ? Math.min(100, done * 100 / need) : 0);
 
             // 课程维度：必修选修都算，看板要反映这门课整体铺开得怎么样
             AdminStatOverviewResp.CourseStat cs = courseStats.computeIfAbsent(a.getCourseId(),
@@ -253,16 +254,21 @@ public class AdminStatBiz {
     }
 
     /**
-     * 一门课是否算学完。
+     * 一门课是否算完成。
      * <p>
-     * 课程一个已发布课时都没有时不能算完成——否则空课程会让完成率虚高到 100%，
-     * 而员工其实什么都没学到。
+     * 考试通过即算完成，与 user_course_assign.finish_status 的语义一致
+     * （3=已通过考试是终态）。漏掉这一条的后果是：考了满分的员工因为
+     * 没把每个课时都点开，被算成未完成、进了逾期名单、还会收到催办，
+     * 让他去学一门已经考过的课。
+     * <p>
+     * 没通过考试时看课时：一个已发布课时都没有的课不能算完成，
+     * 否则空课程会让完成率虚高到 100%，而员工其实什么都没学到。
      * <p>
      * 催办（{@link AdminRemindBiz}）要用同一套判定，所以放在这里共用：
      * 两处各写一遍，迟早会出现「看板说逾期、催办说不逾期」。
      */
-    static boolean isFinished(int need, int done) {
-        return need > 0 && done >= need;
+    static boolean isFinished(int need, int done, boolean passedExam) {
+        return passedExam || (need > 0 && done >= need);
     }
 
     /**

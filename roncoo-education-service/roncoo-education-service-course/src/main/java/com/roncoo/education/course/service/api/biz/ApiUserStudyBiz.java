@@ -75,6 +75,30 @@ public class ApiUserStudyBiz extends BaseBiz {
     }
 
     /**
+     * 计算观看百分比，结果保留两位、限制在 0~100。
+     * <p>
+     * 原来写的是 {@code currentDuration.divide(totalDuration, RoundingMode.CEILING).multiply(100)}。
+     * BigDecimal 的 divide(除数, 舍入模式) 用的是<b>被除数的 scale</b>，
+     * 而 currentDuration 是整数秒（scale=0），于是 5/13 先被向上取整成 1，
+     * 再乘 100 就成了 100%——只要员工暂停过一次，这个课时就被记成学完了。
+     * 学习统计看板的完成率、逾期名单全都建立在这个进度上，必须先算对。
+     * <p>
+     * 先乘 100 再除，并显式指定 scale，避免同样的坑。
+     */
+    private static BigDecimal percent(BigDecimal current, Integer total) {
+        if (current == null || total == null || total <= 0) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal pct = current.multiply(BigDecimal.valueOf(100))
+                .divide(new BigDecimal(total), 2, RoundingMode.HALF_UP);
+        if (pct.compareTo(BigDecimal.ZERO) < 0) {
+            return BigDecimal.ZERO;
+        }
+        // 前端上报的播放位置可能略大于视频长度（拖到结尾、时长有小数被截断）
+        return pct.min(BigDecimal.valueOf(100));
+    }
+
+    /**
      * 暂停学习
      */
     private Result<String> pauseStudy(AuthUserStudyReq req) {
@@ -82,9 +106,11 @@ public class ApiUserStudyBiz extends BaseBiz {
         if (ObjectUtil.isEmpty(userStudy)) {
             return Result.error("studyId不正确");
         }
-        userStudy.setCurrentDuration(req.getTotalDuration());
+        // 存播放位置，用于「继续观看」。原来这里存的是视频总长度，
+        // 一暂停就等于把断点挪到了片尾，下次进来直接从结尾开始
+        userStudy.setCurrentDuration(req.getCurrentDuration() == null ? 0 : req.getCurrentDuration().intValue());
         userStudy.setCurrentPage(req.getTotalPage());
-        userStudy.setProgress(req.getCurrentDuration().divide(new BigDecimal(req.getTotalDuration()), RoundingMode.CEILING).multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP));
+        userStudy.setProgress(percent(req.getCurrentDuration(), req.getTotalDuration()));
         // 更新观看记录
         dao.updateById(userStudy);
         assignStatusBiz.refresh(userStudy.getUserId(), userStudy.getCourseId());
