@@ -167,13 +167,17 @@ public class AdminRemindBiz {
 
         String remark = StrUtil.trimToEmpty(req.getRemark());
         List<UserNotice> batch = new ArrayList<>();
+        // 超过单次上限而没发出去的条数。必须单独记并告诉管理员——
+        // 只报「已发出 500 条」的话，他会以为所有人都催到了，剩下的人再也不会被想起
+        int truncated = 0;
         for (UserCourseAssign a : overdue) {
             if (recent.contains(key(a.getUserId(), a.getCourseId()))) {
                 resp.setSkipped(resp.getSkipped() + 1);
                 continue;
             }
             if (batch.size() >= MAX_PER_CALL) {
-                break;
+                truncated++;
+                continue;
             }
             LocalDate dl = new java.sql.Date(a.getDeadline().getTime()).toLocalDate();
             long days = ChronoUnit.DAYS.between(dl, today);
@@ -207,6 +211,10 @@ public class AdminRemindBiz {
         }
         if (resp.getInvalid() > 0) {
             msg.append("；").append(resp.getInvalid()).append(" 条已完成或不再逾期");
+        }
+        if (truncated > 0) {
+            msg.append("；还有 ").append(truncated).append(" 条超出单次上限（")
+                    .append(MAX_PER_CALL).append(" 条）未发送，请再点一次继续");
         }
         resp.setMessage(msg.toString());
         return Result.success(resp);

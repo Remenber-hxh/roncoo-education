@@ -119,6 +119,17 @@ public final class XlsxUtil {
                 if (event == XMLStreamConstants.START_ELEMENT) {
                     String ln = r.getLocalName();
                     if ("row".equals(ln)) {
+                        // 按 r 属性把中间跳过的空行补回来。
+                        // Excel 不会为空行写 <row>，行 1、2 之后直接跟着 r="5"，
+                        // 不补的话调用方按下标算出来的行号会整体前移，
+                        // 导入报错提示的行号就对不上文件里实际的行——
+                        // 管理员照着行号去找，看到的是一行没问题的数据
+                        int rowNum = parseRowNum(r.getAttributeValue(null, "r"));
+                        if (rowNum > 0 && rowNum - 1 > rows.size() && rowNum - 1 - rows.size() <= MAX_ROW_GAP) {
+                            while (rows.size() < rowNum - 1) {
+                                rows.add(new ArrayList<>());
+                            }
+                        }
                         row = new ArrayList<>();
                     } else if ("c".equals(ln) && row != null) {
                         cellType = r.getAttributeValue(null, "t");
@@ -171,6 +182,27 @@ public final class XlsxUtil {
             throw new IOException("解析工作表失败: " + e.getMessage(), e);
         }
         return rows;
+    }
+
+    /**
+     * 单次最多补多少个空行。
+     * <p>
+     * 有人在第 100 万行敲过一个字符，整张表的 r 就会跳到那里；
+     * 无上限地补会凭空造出百万个空 List 把内存吃光。
+     * 超过上限就不补了——行号会不准，但这种文件本身已经不正常。
+     */
+    private static final int MAX_ROW_GAP = 10000;
+
+    /** &lt;row r="5"&gt; -&gt; 5，取不到返回 -1 */
+    private static int parseRowNum(String ref) {
+        if (ref == null || ref.isEmpty()) {
+            return -1;
+        }
+        try {
+            return Integer.parseInt(ref.trim());
+        } catch (NumberFormatException e) {
+            return -1;
+        }
     }
 
     /** A1 -> 0, B1 -> 1, AA1 -> 26 */

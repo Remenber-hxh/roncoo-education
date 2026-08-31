@@ -61,7 +61,13 @@ public class ApiUserStudyBiz extends BaseBiz {
         } else if (ResourceTypeEnum.DOC.getCode().equals(resource.getResourceType())) {
             // 文档处理
             req.setTotalPage(resource.getDocPage());
-            if (req.getCurrentPage().compareTo(1) >= 0) {
+            // 原来的条件是 currentPage >= 1。页码从 1 开始，等于文档一打开就算学完，
+            // 五十页的课件翻第一页就记 100%，看板上的完成率跟着虚高。
+            // 要翻到最后一页才算学完；doc_page 没维护时无从判断，
+            // 退回「打开即学完」的旧行为，至少不会卡住员工的进度
+            Integer totalPage = resource.getDocPage();
+            Integer currentPage = req.getCurrentPage() == null ? 0 : req.getCurrentPage();
+            if (totalPage == null || totalPage <= 0 || currentPage >= totalPage) {
                 // 学习完成
                 return completeStudy(req);
             }
