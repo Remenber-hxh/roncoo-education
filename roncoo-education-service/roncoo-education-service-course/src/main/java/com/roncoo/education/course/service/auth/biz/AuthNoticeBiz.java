@@ -23,6 +23,9 @@ public class AuthNoticeBiz {
 
     private static final int MAX_PAGE_SIZE = 50;
 
+    /** 页码上限，防止 (current-1)*size 溢出成负数 */
+    private static final int MAX_PAGE_CURRENT = 100000;
+
     private final UserNoticeMapper mapper;
 
     /**
@@ -43,8 +46,10 @@ public class AuthNoticeBiz {
         if (userId == null) {
             return Result.error("未登录");
         }
-        int current = pageCurrent == null || pageCurrent < 1 ? 1 : pageCurrent;
         int size = pageSize == null || pageSize < 1 ? 10 : Math.min(pageSize, MAX_PAGE_SIZE);
+        // 页码要封顶：(current-1)*size 是 int 运算，页码传得足够大就会溢出成负数，
+        // 拼进 LIMIT 里直接是语法错误，接口 500
+        int current = pageCurrent == null || pageCurrent < 1 ? 1 : Math.min(pageCurrent, MAX_PAGE_CURRENT);
 
         int total = mapper.pageCount(userId);
         Page<UserNotice> page = new Page<>();
