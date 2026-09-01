@@ -31,10 +31,29 @@ SET a.finish_status = (
                      FROM user_study
                     WHERE user_id = a.user_id AND course_id = a.course_id) s ON 1 = 1
     ),
-    a.finish_time = CASE WHEN a.finish_time IS NULL THEN NOW() ELSE a.finish_time END
+    -- 完成时间只在真正完成时保留。原来写的是「为空就补 NOW()」，
+    -- 不管算出来是 0 未开始还是 1 学习中都会盖上时间戳，
+    -- 将来出「完成时间」报表会把没学完的人也算进去。
+    -- 已有的时间不覆盖，那是真实的完成时刻；没完成的一律清空。
+    a.finish_time = CASE
+                        WHEN (SELECT CASE
+                                         WHEN p.cnt > 0 AND IFNULL(s.done, 0) >= p.cnt THEN 2
+                                         WHEN IFNULL(s.touched, 0) > 0                 THEN 1
+                                         ELSE 0
+                                     END
+                                FROM (SELECT COUNT(*) AS cnt FROM course_chapter_period
+                                       WHERE course_id = a.course_id AND status_id = 1) p
+                                LEFT JOIN (SELECT SUM(CASE WHEN progress >= 100 THEN 1 ELSE 0 END) AS done,
+                                                  COUNT(*) AS touched
+                                             FROM user_study
+                                            WHERE user_id = a.user_id AND course_id = a.course_id) s ON 1 = 1
+                             ) >= 2
+                            THEN IFNULL(a.finish_time, NOW())
+                        ELSE NULL
+                    END
 WHERE IFNULL(a.finish_status, 0) <> 3;
 
--- 校验：指派表里的状态应与实际进度一致
+-- 校验：指派表里的状态应与实际进度一致，且完成时间只在完成态才有
 SELECT a.user_id, a.course_id, a.finish_status AS 状态,
        p.cnt AS 课时数, IFNULL(s.done, 0) AS 已完成课时,
        CASE
@@ -44,7 +63,12 @@ SELECT a.user_id, a.course_id, a.finish_status AS 状态,
                 AND a.finish_status = 1 THEN '一致'
            WHEN IFNULL(s.touched, 0) = 0 AND a.finish_status = 0 THEN '一致'
            ELSE '不一致!!'
-       END AS 结论
+       END AS 结论,
+       CASE
+           WHEN a.finish_status >= 2 AND a.finish_time IS NOT NULL THEN '有完成时间'
+           WHEN a.finish_status <  2 AND a.finish_time IS NULL     THEN '无完成时间'
+           ELSE '完成时间不该有/不该缺!!'
+       END AS 完成时间校验
 FROM user_course_assign a
 LEFT JOIN (SELECT course_id, COUNT(*) AS cnt FROM course_chapter_period
             WHERE status_id = 1 GROUP BY course_id) p ON p.course_id = a.course_id

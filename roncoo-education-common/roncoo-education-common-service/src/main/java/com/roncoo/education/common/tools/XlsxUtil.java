@@ -185,6 +185,16 @@ public final class XlsxUtil {
     }
 
     /**
+     * 解压后单个条目、以及整包的字节上限。
+     * <p>
+     * 两万行的题库导出也就几 MB，这个额度对正常使用绰绰有余；
+     * 它挡的是解压炸弹——压缩比可以做到上千倍，
+     * 不设限的话一个几 MB 的上传就能把服务的堆吃光。
+     */
+    private static final long MAX_ENTRY_BYTES = 64L * 1024 * 1024;
+    private static final long MAX_TOTAL_BYTES = 128L * 1024 * 1024;
+
+    /**
      * 单次最多补多少个空行。
      * <p>
      * 有人在第 100 万行敲过一个字符，整张表的 r 就会跳到那里；
@@ -231,6 +241,7 @@ public final class XlsxUtil {
 
     private static Map<String, byte[]> unzip(InputStream in) throws IOException {
         Map<String, byte[]> parts = new HashMap<>();
+        long total = 0;
         try (ZipInputStream zis = new ZipInputStream(in, StandardCharsets.UTF_8)) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
@@ -240,7 +251,17 @@ public final class XlsxUtil {
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 byte[] buf = new byte[8192];
                 int len;
+                long entryTotal = 0;
                 while ((len = zis.read(buf)) > 0) {
+                    entryTotal += len;
+                    total += len;
+                    // 边解边判，不能等读完再看大小——压缩包解出来多大在读完之前是未知的。
+                    // 上传限制是 2GB（为传视频设的），而这里是整包解进内存：
+                    // 一个几 MB 的 zip 炸弹解出来就能有几十 GB，足以把服务撑挂
+                    if (entryTotal > MAX_ENTRY_BYTES || total > MAX_TOTAL_BYTES) {
+                        throw new IOException("文件解压后过大，疑似损坏或非正常的 xlsx。"
+                                + "正常的题库/员工导入文件不会超过 " + (MAX_TOTAL_BYTES / 1024 / 1024) + "MB");
+                    }
                     bos.write(buf, 0, len);
                 }
                 parts.put(entry.getName(), bos.toByteArray());
