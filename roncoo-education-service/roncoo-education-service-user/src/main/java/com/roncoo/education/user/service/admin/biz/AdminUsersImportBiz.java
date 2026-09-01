@@ -93,14 +93,33 @@ public class AdminUsersImportBiz extends BaseBiz {
         // 工号 16 的真实员工就被张三覆盖掉了。示例只能写在说明文字里，
         // 保证这一行无论如何都过不了校验，忘删也只是报一条错。
         rows.add(List.of(
-                "必填，纯数字，例：16",
-                "必填，例：张三",
-                "必填，11位手机号，是登录账号",
-                "可选，限：" + teamNames,
-                "可选，限：" + groupNames,
-                "可选，例：强电技工",
-                "可选，例：2023/6/12，留空也行"));
-        XlsxUtil.write(out, "员工导入", rows);
+                "必填 纯数字",
+                "必填",
+                "必填 11位手机号",
+                "可选",
+                "可选",
+                "可选",
+                "可选"));
+
+        // 详细说明单独一张表：写在数据表里会被当成一行数据去校验
+        List<List<String>> tips = new ArrayList<>();
+        tips.add(List.of("填写说明"));
+        tips.add(List.of(""));
+        tips.add(List.of("从「员工导入」表的第 3 行开始填写。第 2 行是字段说明，导入前删掉；忘了删也只会多一条报错，不影响其它行。"));
+        tips.add(List.of(""));
+        tips.add(List.of("工号", "必填，纯数字，例：16。工号是识别员工的依据——工号已存在就更新那个人的资料，不存在才新建。"));
+        tips.add(List.of("姓名", "必填，例：张三。"));
+        tips.add(List.of("手机号", "必填，11 位。这是员工登录平台的账号，初始密码为手机号后六位。"));
+        tips.add(List.of("班组", "可选。可填：" + teamNames));
+        tips.add(List.of("项目组", "可选。可填：" + groupNames));
+        tips.add(List.of("岗位职务", "可选，例：强电技工。"));
+        tips.add(List.of("入职日期", "可选，例：2023/6/12，留空也行。"));
+        tips.add(List.of(""));
+        tips.add(List.of("导入后如有错误行，页面会逐行列出行号和原因，改完那几行再传一次即可，已成功的不会重复导入。"));
+
+        XlsxUtil.write(out, List.of(
+                new XlsxUtil.Sheet("员工导入", rows, new int[]{12, 14, 18, 16, 18, 18, 16}),
+                new XlsxUtil.Sheet("填写说明", tips, new int[]{14, 42})));
     }
 
     public Result<AdminUsersImportResp> importUsers(MultipartFile file) {

@@ -60,22 +60,59 @@ public final class XlsxUtil {
             shared = readSharedStrings(ss);
         }
 
-        // 取第一个工作表。不假定一定叫 sheet1.xml
-        byte[] sheet = null;
-        String firstName = null;
-        for (Map.Entry<String, byte[]> e : parts.entrySet()) {
-            String name = e.getKey();
-            if (name.startsWith("xl/worksheets/") && name.endsWith(".xml")) {
-                if (firstName == null || name.compareTo(firstName) < 0) {
-                    firstName = name;
-                    sheet = e.getValue();
-                }
-            }
-        }
+        byte[] sheet = firstSheet(parts);
         if (sheet == null) {
             throw new IOException("文件里找不到工作表，可能不是有效的 xlsx");
         }
         return readSheet(sheet, shared);
+    }
+
+    /**
+     * 取工作簿里排在第一位的工作表。
+     * <p>
+     * 先按 workbook.xml 声明的顺序取，再经 rels 换成实际文件名——
+     * 文件名的顺序不等于工作表的顺序：模板现在带了「填写说明」第二张表，
+     * 使用者在 Excel 里把它拖到前面，文件名多半还是 sheet2.xml，
+     * 只按文件名排序就会把说明当成数据读进来。
+     * 解析不出来时退回按文件名取最小的那个。
+     */
+    private static byte[] firstSheet(Map<String, byte[]> parts) {
+        byte[] wb = parts.get("xl/workbook.xml");
+        byte[] rels = parts.get("xl/_rels/workbook.xml.rels");
+        if (wb != null && rels != null) {
+            try {
+                String wbXml = new String(wb, StandardCharsets.UTF_8);
+                java.util.regex.Matcher m = java.util.regex.Pattern
+                        .compile("<sheet\\b[^>]*r:id=\"([^\"]+)\"").matcher(wbXml);
+                if (m.find()) {
+                    String rid = m.group(1);
+                    String relXml = new String(rels, StandardCharsets.UTF_8);
+                    java.util.regex.Matcher t = java.util.regex.Pattern
+                            .compile("<Relationship\\b[^>]*Id=\"" + java.util.regex.Pattern.quote(rid)
+                                    + "\"[^>]*Target=\"([^\"]+)\"").matcher(relXml);
+                    if (t.find()) {
+                        String target = t.group(1).replaceFirst("^/?xl/", "").replaceFirst("^/", "");
+                        byte[] hit = parts.get("xl/" + target);
+                        if (hit != null) {
+                            return hit;
+                        }
+                    }
+                }
+            } catch (Exception ignored) {
+                // 结构不标准就走下面的兜底
+            }
+        }
+        byte[] sheet = null;
+        String firstName = null;
+        for (Map.Entry<String, byte[]> e : parts.entrySet()) {
+            String name = e.getKey();
+            if (name.startsWith("xl/worksheets/") && name.endsWith(".xml")
+                    && (firstName == null || name.compareTo(firstName) < 0)) {
+                firstName = name;
+                sheet = e.getValue();
+            }
+        }
+        return sheet;
     }
 
     private static List<String> readSharedStrings(byte[] xml) throws IOException {
@@ -277,55 +314,174 @@ public final class XlsxUtil {
 
     /**
      * 写单工作表，全部按文本写入（inlineStr），不依赖共享字符串表。
+     * 列宽按内容自动估算，并冻结表头行。
      */
     public static void write(OutputStream out, String sheetName, List<List<String>> rows) throws IOException {
-        try (ZipOutputStream zos = new ZipOutputStream(out, StandardCharsets.UTF_8)) {
-            put(zos, "[Content_Types].xml",
-                    "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-                            + "<Types xmlns=\"" + NS_CT + "\">"
-                            + "<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>"
-                            + "<Default Extension=\"xml\" ContentType=\"application/xml\"/>"
-                            + "<Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/>"
-                            + "<Override PartName=\"/xl/worksheets/sheet1.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>"
-                            + "</Types>");
+        write(out, sheetName, rows, null);
+    }
 
+    /**
+     * 一个工作表。
+     */
+    public static final class Sheet {
+        final String name;
+        final List<List<String>> rows;
+        final int[] widths;
+
+        public Sheet(String name, List<List<String>> rows, int[] widths) {
+            this.name = name;
+            this.rows = rows;
+            this.widths = widths;
+        }
+    }
+
+    /**
+     * 写多工作表。
+     * <p>
+     * 导入模板用得到：填写说明放在第二张表，不跟数据挤在同一张表里——
+     * 说明文字写在数据区的任何一列都会被导入当成一行数据去校验，
+     * 于是每条说明都变成一条「题干为空」的报错。
+     */
+    public static void write(OutputStream out, List<Sheet> sheets) throws IOException {
+        if (sheets == null || sheets.isEmpty()) {
+            throw new IOException("至少要有一个工作表");
+        }
+        try (ZipOutputStream zos = new ZipOutputStream(out, StandardCharsets.UTF_8)) {
+            StringBuilder ct = new StringBuilder()
+                    .append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
+                    .append("<Types xmlns=\"").append(NS_CT).append("\">")
+                    .append("<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>")
+                    .append("<Default Extension=\"xml\" ContentType=\"application/xml\"/>")
+                    .append("<Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/>");
+            StringBuilder wbSheets = new StringBuilder();
+            StringBuilder wbRels = new StringBuilder()
+                    .append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
+                    .append("<Relationships xmlns=\"").append(NS_PKG_REL).append("\">");
+
+            for (int i = 0; i < sheets.size(); i++) {
+                int n = i + 1;
+                ct.append("<Override PartName=\"/xl/worksheets/sheet").append(n)
+                        .append(".xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>");
+                wbSheets.append("<sheet name=\"").append(esc(sheets.get(i).name))
+                        .append("\" sheetId=\"").append(n).append("\" r:id=\"rId").append(n).append("\"/>");
+                wbRels.append("<Relationship Id=\"rId").append(n).append("\" Type=\"").append(NS_REL)
+                        .append("/worksheet\" Target=\"worksheets/sheet").append(n).append(".xml\"/>");
+            }
+            ct.append("</Types>");
+            wbRels.append("</Relationships>");
+
+            put(zos, "[Content_Types].xml", ct.toString());
             put(zos, "_rels/.rels",
                     "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                             + "<Relationships xmlns=\"" + NS_PKG_REL + "\">"
                             + "<Relationship Id=\"rId1\" Type=\"" + NS_REL + "/officeDocument\" Target=\"xl/workbook.xml\"/>"
                             + "</Relationships>");
-
             put(zos, "xl/workbook.xml",
                     "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
                             + "<workbook xmlns=\"" + NS_MAIN + "\" xmlns:r=\"" + NS_REL + "\">"
-                            + "<sheets><sheet name=\"" + esc(sheetName) + "\" sheetId=\"1\" r:id=\"rId1\"/></sheets>"
-                            + "</workbook>");
+                            + "<sheets>" + wbSheets + "</sheets></workbook>");
+            put(zos, "xl/_rels/workbook.xml.rels", wbRels.toString());
 
-            put(zos, "xl/_rels/workbook.xml.rels",
-                    "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
-                            + "<Relationships xmlns=\"" + NS_PKG_REL + "\">"
-                            + "<Relationship Id=\"rId1\" Type=\"" + NS_REL + "/worksheet\" Target=\"worksheets/sheet1.xml\"/>"
-                            + "</Relationships>");
-
-            StringBuilder sb = new StringBuilder();
-            sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
-                    .append("<worksheet xmlns=\"").append(NS_MAIN).append("\"><sheetData>");
-            for (int r = 0; r < rows.size(); r++) {
-                List<String> row = rows.get(r);
-                sb.append("<row r=\"").append(r + 1).append("\">");
-                for (int c = 0; c < row.size(); c++) {
-                    String v = row.get(c);
-                    if (v == null || v.isEmpty()) {
-                        continue;
-                    }
-                    sb.append("<c r=\"").append(colName(c)).append(r + 1).append("\" t=\"inlineStr\"><is><t xml:space=\"preserve\">")
-                            .append(esc(v)).append("</t></is></c>");
-                }
-                sb.append("</row>");
+            for (int i = 0; i < sheets.size(); i++) {
+                put(zos, "xl/worksheets/sheet" + (i + 1) + ".xml", sheetXml(sheets.get(i)));
             }
-            sb.append("</sheetData></worksheet>");
-            put(zos, "xl/worksheets/sheet1.xml", sb.toString());
         }
+    }
+
+    /**
+     * 写单工作表。
+     *
+     * @param widths 各列宽度（Excel 字符宽度）。传 null 则按内容自动估算。
+     *               列数不足的部分按估算值补齐。
+     */
+    public static void write(OutputStream out, String sheetName, List<List<String>> rows, int[] widths) throws IOException {
+        write(out, List.of(new Sheet(sheetName, rows, widths)));
+    }
+
+    /** 生成一张工作表的 XML */
+    private static String sheetXml(Sheet sheet) {
+        List<List<String>> rows = sheet.rows;
+        StringBuilder sb = new StringBuilder();
+        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
+                .append("<worksheet xmlns=\"").append(NS_MAIN).append("\">");
+
+        // 冻结首行。表头有十几列，往下翻两屏就不知道哪列是哪列了
+        sb.append("<sheetViews><sheetView workbookViewId=\"0\">")
+                .append("<pane ySplit=\"1\" topLeftCell=\"A2\" activePane=\"bottomLeft\" state=\"frozen\"/>")
+                .append("</sheetView></sheetViews>");
+
+        int[] w = resolveWidths(rows, sheet.widths);
+        if (w.length > 0) {
+            sb.append("<cols>");
+            for (int i = 0; i < w.length; i++) {
+                sb.append("<col min=\"").append(i + 1).append("\" max=\"").append(i + 1)
+                        .append("\" width=\"").append(w[i]).append("\" customWidth=\"1\"/>");
+            }
+            sb.append("</cols>");
+        }
+
+        sb.append("<sheetData>");
+        for (int r = 0; r < rows.size(); r++) {
+            List<String> row = rows.get(r);
+            sb.append("<row r=\"").append(r + 1).append("\">");
+            for (int c = 0; c < row.size(); c++) {
+                String v = row.get(c);
+                if (v == null || v.isEmpty()) {
+                    continue;
+                }
+                sb.append("<c r=\"").append(colName(c)).append(r + 1).append("\" t=\"inlineStr\"><is><t xml:space=\"preserve\">")
+                        .append(esc(v)).append("</t></is></c>");
+            }
+            sb.append("</row>");
+        }
+        sb.append("</sheetData></worksheet>");
+        return sb.toString();
+    }
+
+    /** 列宽下限/上限。太窄看不清，太宽一屏放不下几列 */
+    private static final int MIN_WIDTH = 8;
+    private static final int MAX_WIDTH = 42;
+
+    /**
+     * 估算列宽。
+     * <p>
+     * 中日韩字符在 Excel 里约占两个字符宽，按 1 计算的话中文表头永远偏窄——
+     * 模板里「必填，单选/多选/判断」这类说明就是这么被截断的。
+     * 只看前若干行：正文可能有很长的题干，全表扫描会把列撑到上限。
+     */
+    private static int[] resolveWidths(List<List<String>> rows, int[] given) {
+        int cols = 0;
+        for (List<String> r : rows) {
+            cols = Math.max(cols, r.size());
+        }
+        int[] w = new int[cols];
+        int sample = Math.min(rows.size(), 30);
+        for (int c = 0; c < cols; c++) {
+            if (given != null && c < given.length && given[c] > 0) {
+                w[c] = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, given[c]));
+                continue;
+            }
+            int max = 0;
+            for (int r = 0; r < sample; r++) {
+                List<String> row = rows.get(r);
+                if (c >= row.size() || row.get(c) == null) {
+                    continue;
+                }
+                max = Math.max(max, displayWidth(row.get(c)));
+            }
+            // 留两格余量，否则内容会顶到边框
+            w[c] = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, max + 2));
+        }
+        return w;
+    }
+
+    /** 全角字符按 2 个宽度算 */
+    private static int displayWidth(String s) {
+        int n = 0;
+        for (int i = 0; i < s.length(); i++) {
+            n += s.charAt(i) > 0x2E80 ? 2 : 1;
+        }
+        return n;
     }
 
     private static void put(ZipOutputStream zos, String name, String content) throws IOException {
