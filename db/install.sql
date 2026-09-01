@@ -54,6 +54,10 @@ SOURCE w3_stat_menu.sql;
 -- 站内消息（逾期催办）+ 催办按钮权限
 SOURCE w4_notice.sql;
 
+-- 补齐菜单的接口权限。不执行的话，除 admin(userId=1) 外任何账号
+-- 登录后都是 403，一个接口都调不了——必须放在所有菜单脚本之后。
+SOURCE w4_menu_apis.sql;
+
 -- ============ 三点五、业务基础数据 ============
 -- 六大培训模块的课程分类。课程、题库都要归到这些模块下，属于必装项。
 SOURCE w3_course_category.sql;
