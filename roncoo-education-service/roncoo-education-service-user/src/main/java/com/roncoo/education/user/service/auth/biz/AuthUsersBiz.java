@@ -1,7 +1,10 @@
 package com.roncoo.education.user.service.auth.biz;
 
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.crypto.digest.DigestUtil;
 import com.roncoo.education.common.base.ThreadContext;
+import com.roncoo.education.common.tools.RsaUtil;
 import com.roncoo.education.common.core.base.Result;
 import com.roncoo.education.common.core.enums.StatusIdEnum;
 import com.roncoo.education.common.tools.BeanUtil;
@@ -13,6 +16,7 @@ import com.roncoo.education.user.dao.UsersDao;
 import com.roncoo.education.user.dao.impl.mapper.entity.Users;
 import com.roncoo.education.user.service.auth.req.AuthBindingReq;
 import com.roncoo.education.user.service.auth.req.AuthUsersHeadReq;
+import com.roncoo.education.user.service.auth.req.AuthUsersPswReq;
 import com.roncoo.education.user.service.auth.req.AuthUsersReq;
 import com.roncoo.education.user.service.auth.resp.AuthUsersResp;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +35,13 @@ import jakarta.validation.constraints.NotNull;
 @Component
 @RequiredArgsConstructor
 public class AuthUsersBiz extends BaseBiz {
+
+    /**
+     * 新密码最短位数。
+     * 初始密码是手机号后六位，定 6 位是为了不把「刚拿到账号想立刻改掉」的人挡在外面；
+     * 要求更长的话得同时提高初始密码的强度，那是另一件事。
+     */
+    private static final int MIN_PSW_LEN = 6;
 
     @NotNull
     private final UsersDao dao;
@@ -64,6 +75,69 @@ public class AuthUsersBiz extends BaseBiz {
             return Result.success("操作成功");
         }
         return Result.error("操作失败");
+    }
+
+    /**
+     * 员工自助修改密码（二开新增）。
+     * <p>
+     * 平台没有配短信平台，原有的「忘记密码」要发验证码，实际是断的：
+     * 请求会真的去调阿里云、因为密钥为空而超时，员工看到的却是
+     * 「操作频繁，请稍后再试」这种完全误导的提示。
+     * <p>
+     * 这里提供不依赖短信的那一半：已登录的员工凭原密码改新密码。
+     * 真正忘记密码的只能由管理员在后台重置——内部系统里这是合理的，
+     * 没有短信或邮箱做二次验证时，任何「自助找回」都等于谁都能改别人的密码。
+     */
+    public Result<String> updatePsw(AuthUsersPswReq req) {
+        Long userId = ThreadContext.userId();
+        if (userId == null) {
+            return Result.error("未登录");
+        }
+        Users user = dao.getById(userId);
+        if (ObjectUtil.isEmpty(user)) {
+            return Result.error("账号不存在");
+        }
+
+        String oldPsw = decrypt(req.getOldPwdEncrypt());
+        String newPsw = decrypt(req.getNewPwdEncrypt());
+        if (!StringUtils.hasText(oldPsw) || !StringUtils.hasText(newPsw)) {
+            return Result.error("密码不能为空");
+        }
+
+        // 与登录同一套算法：sha1(盐 + 明文)，小写
+        if (!DigestUtil.sha1Hex(user.getMobileSalt() + oldPsw).equals(user.getMobilePsw())) {
+            return Result.error("原密码不正确");
+        }
+        if (newPsw.equals(oldPsw)) {
+            return Result.error("新密码不能与原密码相同");
+        }
+        if (newPsw.length() < MIN_PSW_LEN) {
+            return Result.error("新密码至少 " + MIN_PSW_LEN + " 位");
+        }
+
+        // 换新盐，避免旧盐加上被泄露过的哈希还能对上
+        Users record = new Users();
+        record.setId(userId);
+        record.setMobileSalt(IdUtil.simpleUUID());
+        record.setMobilePsw(DigestUtil.sha1Hex(record.getMobileSalt() + newPsw));
+        if (dao.updateById(record) > 0) {
+            return Result.success("修改成功");
+        }
+        return Result.error("修改失败");
+    }
+
+    /**
+     * RSA 解密。私钥同登录用的那把，取自「参数配置」。
+     */
+    private String decrypt(String encrypted) {
+        if (!StringUtils.hasText(encrypted)) {
+            return null;
+        }
+        String privateKey = feignSysConfig.getLogin().getRsaLoginPrivateKey();
+        if (!StringUtils.hasText(privateKey)) {
+            return null;
+        }
+        return RsaUtil.decrypt(encrypted, privateKey);
     }
 
     public Result<String> update(AuthUsersReq req) {

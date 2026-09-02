@@ -4,6 +4,7 @@ import com.roncoo.education.common.core.base.Result;
 import com.roncoo.education.user.service.auth.biz.AuthUsersBiz;
 import com.roncoo.education.user.service.auth.req.AuthBindingReq;
 import com.roncoo.education.user.service.auth.req.AuthUsersHeadReq;
+import com.roncoo.education.user.service.auth.req.AuthUsersPswReq;
 import com.roncoo.education.user.service.auth.req.AuthUsersReq;
 import com.roncoo.education.user.service.auth.resp.AuthUsersResp;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,6 +49,12 @@ public class AuthUsersController {
     @PostMapping(value = "/head")
     public Result<String> updateHead(@RequestBody AuthUsersHeadReq req) {
         return biz.updateHead(req);
+    }
+
+    @Operation(summary = "修改密码", description = "已登录员工凭原密码修改自己的密码，不依赖短信")
+    @PostMapping(value = "/psw")
+    public Result<String> updatePsw(@RequestBody @Valid AuthUsersPswReq req) {
+        return biz.updatePsw(req);
     }
 
     @Operation(summary = "绑定接口", description = "绑定微信")
