@@ -4,6 +4,7 @@ import com.roncoo.education.course.dao.impl.mapper.entity.UserCourseAssign;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.Date;
 import java.util.List;
@@ -89,4 +90,21 @@ public interface StatMapper {
      */
     @Select("select * from user_course_assign where status_id = 1")
     List<UserCourseAssign> listAllAssign();
+
+    /**
+     * 更新一门课的排课配置。
+     * <p>
+     * 五列全部无条件写入，不用 {@code updateByPrimaryKeySelective}——
+     * 那个对 null 字段会跳过，于是「把推送天数清空、改回手工指派」这个操作
+     * 永远存不进去，界面上看着改了、实际没变，且没有任何报错。
+     */
+    @Update("update course set push_day = #{pushDay}, push_scope = #{pushScope}, "
+            + "push_team_ids = #{pushTeamIds}, deadline_days = #{deadlineDays}, "
+            + "need_sequential = #{needSequential} where id = #{courseId}")
+    int updateSchedule(@Param("courseId") Long courseId,
+                       @Param("pushDay") Integer pushDay,
+                       @Param("pushScope") Integer pushScope,
+                       @Param("pushTeamIds") String pushTeamIds,
+                       @Param("deadlineDays") Integer deadlineDays,
+                       @Param("needSequential") Integer needSequential);
 }
