@@ -5,6 +5,7 @@ import com.roncoo.education.system.feign.biz.FeignSysConfigBiz;
 import com.roncoo.education.system.feign.interfaces.IFeignSysConfig;
 import com.roncoo.education.system.feign.interfaces.vo.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -47,6 +48,11 @@ public class FeignSysConfigController implements IFeignSysConfig {
     @Override
     public DocConfig getDoc() {
         return biz.getDoc();
+    }
+
+    @Override
+    public String getByConfigKey(@PathVariable(value = "configKey") String configKey) {
+        return biz.getByConfigKey(configKey);
     }
 
 }

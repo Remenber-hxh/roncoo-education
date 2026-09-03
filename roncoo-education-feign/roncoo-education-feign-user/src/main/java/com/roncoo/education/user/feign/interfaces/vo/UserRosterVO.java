@@ -41,4 +41,11 @@ public class UserRosterVO implements Serializable {
 
     /** 项目组名称，未归属时为空 */
     private String groupName;
+
+    /**
+     * 入职日期。自动排课按「入职第 N 天」推送，缺这个日期的员工不参与自动排课。
+     * 用 LocalDate 与 Users 实体保持一致——这是个纯日期，不该带时分秒，
+     * 换成 Date 会在跨时区序列化时出现整体偏一天的问题。
+     */
+    private java.time.LocalDate hireDate;
 }

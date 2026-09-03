@@ -40,6 +40,26 @@ public class Course implements Serializable {
     private String introduce;
 
     private static final long serialVersionUID = 1L;
+    /**
+     * 入职后第几天推送；为空表示不自动推送，只能手工指派
+     */
+    private Integer pushDay;
+    /**
+     * 推送范围 1全员 2指定班组
+     */
+    private Integer pushScope;
+    /**
+     * push_scope=2 时生效，班组ID逗号分隔
+     */
+    private String pushTeamIds;
+    /**
+     * 推送后多少天内需完成
+     */
+    private Integer deadlineDays;
+    /**
+     * 是否按顺序解锁课时 0否 1是（需求里的「闯关」）
+     */
+    private Integer needSequential;
 
     public Long getId() {
         return id;
@@ -169,6 +189,46 @@ public class Course implements Serializable {
         this.introduce = introduce == null ? null : introduce.trim();
     }
 
+    public Integer getPushDay() {
+        return pushDay;
+    }
+
+    public void setPushDay(Integer pushDay) {
+        this.pushDay = pushDay;
+    }
+
+    public Integer getPushScope() {
+        return pushScope;
+    }
+
+    public void setPushScope(Integer pushScope) {
+        this.pushScope = pushScope;
+    }
+
+    public String getPushTeamIds() {
+        return pushTeamIds;
+    }
+
+    public void setPushTeamIds(String pushTeamIds) {
+        this.pushTeamIds = pushTeamIds == null ? null : pushTeamIds.trim();
+    }
+
+    public Integer getDeadlineDays() {
+        return deadlineDays;
+    }
+
+    public void setDeadlineDays(Integer deadlineDays) {
+        this.deadlineDays = deadlineDays;
+    }
+
+    public Integer getNeedSequential() {
+        return needSequential;
+    }
+
+    public void setNeedSequential(Integer needSequential) {
+        this.needSequential = needSequential;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -190,6 +250,11 @@ public class Course implements Serializable {
         sb.append(", speedDouble=").append(speedDouble);
         sb.append(", speedDrag=").append(speedDrag);
         sb.append(", introduce=").append(introduce);
+        sb.append(", pushDay=").append(pushDay);
+        sb.append(", pushScope=").append(pushScope);
+        sb.append(", pushTeamIds=").append(pushTeamIds);
+        sb.append(", deadlineDays=").append(deadlineDays);
+        sb.append(", needSequential=").append(needSequential);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

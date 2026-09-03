@@ -63,10 +63,10 @@ public class UserStudyJob {
                     AuthUserStudyReq req = cacheRedis.get(key, AuthUserStudyReq.class);
                     UserStudy userStudy = userStudyDao.getById(req.getStudyId());
                     if (ResourceTypeEnum.VIDEO.getCode().equals(req.getResourceType()) || ResourceTypeEnum.AUDIO.getCode().equals(req.getResourceType())) {
-                        userStudy.setProgress(req.getCurrentDuration().divide(new BigDecimal(req.getTotalDuration()), RoundingMode.CEILING).multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP));
+                        userStudy.setProgress(percent(req.getCurrentDuration(), req.getTotalDuration()));
                         userStudy.setCurrentDuration(req.getCurrentDuration().intValue());
                     } else if (ResourceTypeEnum.DOC.getCode().equals(req.getResourceType())) {
-                        userStudy.setProgress(BigDecimal.valueOf(req.getCurrentPage()).divide(BigDecimal.valueOf(req.getTotalPage())).multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP));
+                        userStudy.setProgress(percent(BigDecimal.valueOf(req.getCurrentPage()), req.getTotalPage()));
                         userStudy.setCurrentPage(req.getCurrentPage());
                     }
                     userStudyDao.updateById(userStudy);
@@ -76,6 +76,32 @@ public class UserStudyJob {
                 }
             }
         }
+    }
+
+    /**
+     * 计算观看百分比，保留两位、限制在 0~100。
+     * <p>
+     * 原来两处都写成 {@code 分子.divide(分母, ...).multiply(100)}，各有一个问题：
+     * <ul>
+     * <li>音视频那支用 {@code divide(除数, RoundingMode.CEILING)}——
+     *     该重载用<b>被除数的 scale</b>，而 currentDuration 是整数秒（scale=0），
+     *     于是 5/13 先被向上取整成 1，乘 100 就成了 100%：暂停一次就算学完。</li>
+     * <li>文档那支 {@code divide(除数)} 连舍入模式都没有，
+     *     除不尽时（如 1/3）直接抛 ArithmeticException，整个定时任务中断。</li>
+     * </ul>
+     * 与 ApiUserStudyBiz.percent 是同一套算法，两处都要改，
+     * 否则「实时上报」和「定时补算」会算出不同的进度。
+     */
+    private static BigDecimal percent(BigDecimal current, Integer total) {
+        if (current == null || total == null || total <= 0) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal pct = current.multiply(BigDecimal.valueOf(100))
+                .divide(new BigDecimal(total), 2, RoundingMode.HALF_UP);
+        if (pct.compareTo(BigDecimal.ZERO) < 0) {
+            return BigDecimal.ZERO;
+        }
+        return pct.min(BigDecimal.valueOf(100));
     }
 
 }

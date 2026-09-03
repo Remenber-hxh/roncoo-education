@@ -21,6 +21,9 @@ public class FeignSysConfigBiz extends BaseBiz {
     @NotNull
     private final SysConfigCommonBiz sysConfigCommonBiz;
 
+    @NotNull
+    private final com.roncoo.education.system.dao.SysConfigDao sysConfigDao;
+
     public SysConfig getSys() {
         return sysConfigCommonBiz.getSysConfig(SysConfig.class);
     }
@@ -40,5 +43,14 @@ public class FeignSysConfigBiz extends BaseBiz {
 
     public LoginConfig getLogin() {
         return sysConfigCommonBiz.getSysConfig(LoginConfig.class);
+    }
+
+    /**
+     * 按 key 取单个配置值，取不到返回 null。
+     * 供二开新增的、不属于任何一包配置的键使用（如自动排课开关）。
+     */
+    public String getByConfigKey(String configKey) {
+        com.roncoo.education.system.dao.impl.mapper.entity.SysConfig c = sysConfigDao.getByConfigKey(configKey);
+        return c == null ? null : c.getConfigValue();
     }
 }

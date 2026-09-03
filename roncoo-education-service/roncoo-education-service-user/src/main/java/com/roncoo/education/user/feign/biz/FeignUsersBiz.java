@@ -96,7 +96,8 @@ public class FeignUsersBiz extends BaseBiz {
                     .setTeamId(u.getTeamId())
                     .setTeamName(u.getTeamId() == null ? null : teamNames.get(u.getTeamId()))
                     .setProjectGroupId(u.getProjectGroupId())
-                    .setGroupName(u.getProjectGroupId() == null ? null : groupNames.get(u.getProjectGroupId())));
+                    .setGroupName(u.getProjectGroupId() == null ? null : groupNames.get(u.getProjectGroupId()))
+                    .setHireDate(u.getHireDate()));
         }
         return result;
     }

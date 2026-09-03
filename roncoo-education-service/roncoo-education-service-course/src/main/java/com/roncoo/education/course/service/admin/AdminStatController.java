@@ -29,6 +29,8 @@ public class AdminStatController {
 
     private final AdminRemindBiz remindBiz;
 
+    private final com.roncoo.education.course.job.AutoAssignJob autoAssignJob;
+
     @Operation(summary = "学习统计看板")
     @GetMapping("/overview")
     public Result<AdminStatOverviewResp> overview(@RequestParam(required = false) Integer days) {
@@ -39,5 +41,16 @@ public class AdminStatController {
     @PostMapping("/remind")
     public Result<AdminRemindResp> remind(@RequestBody AdminRemindReq req) {
         return remindBiz.remind(req);
+    }
+
+    /**
+     * 自动排课平时由定时任务凌晨触发。这里提供手工触发，
+     * 用于配完推送规则后立刻验证效果，不必等到第二天。
+     */
+    @Operation(summary = "立即执行一次自动排课")
+    @PostMapping("/auto-assign/run")
+    public Result<String> runAutoAssign() {
+        int n = autoAssignJob.doAssign();
+        return Result.success("已执行，新增指派 " + n + " 条");
     }
 }

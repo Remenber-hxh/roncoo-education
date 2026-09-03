@@ -61,6 +61,9 @@ SOURCE w4_menu_apis.sql;
 -- 下线友情链接（内部系统不需要对外友链）
 SOURCE w4_remove_friend_link.sql;
 
+-- 按入职天数自动排课 + 顺序解锁（闯关）
+SOURCE w5_auto_assign.sql;
+
 -- ============ 三点五、业务基础数据 ============
 -- 六大培训模块的课程分类。课程、题库都要归到这些模块下，属于必装项。
 SOURCE w3_course_category.sql;
