@@ -36,8 +36,18 @@ public class ApiUserStudyBiz extends BaseBiz {
     private final ResourceDao resourceDao;
     @NotNull
     private final AssignStatusBiz assignStatusBiz;
+    @NotNull
+    private final com.roncoo.education.course.service.biz.SequentialBiz sequentialBiz;
 
     public Result<String> study(AuthUserStudyReq req) {
+        // 顺序解锁（闯关）：直接调这个接口就能把任意课时的进度刷满，
+        // 只在进入课时时拦是不够的。
+        // 入参只有 studyId，用户和课时从学习记录反查——
+        // 这条记录是进入课时时建的，正好能证明请求方到过那个课时
+        UserStudy study = dao.getById(req.getStudyId());
+        if (ObjectUtil.isNotEmpty(study) && !sequentialBiz.isUnlocked(study.getUserId(), study.getPeriodId())) {
+            return Result.error("请先完成上一课时");
+        }
         // 资源信息
         Resource resource = getByResource(req);
         if (ObjectUtil.isEmpty(resource)) {

@@ -146,9 +146,47 @@ public class CourseBiz extends BaseBiz {
                         periodResp.setPeriodProgress(userStudyProgressMap.get(periodResp.getId()));
                     }
                 }
+
+                // 顺序解锁（需求里的「闯关」）。必须在章节和课时都填好之后算，
+                // 因为它依赖跨章节的全局顺序：第一章最后一课时没学完，第二章第一课时也该锁着
+                markUnlocked(courseResp, userStudyProgressMap);
             }
         }
         return Result.success(courseResp);
+    }
+
+    /** 已学完的判定阈值。与统计口径一致：progress >= 100 */
+    private static final BigDecimal COMPLETE = BigDecimal.valueOf(100);
+
+    /**
+     * 标记每个课时的解锁状态（需求里的「闯关」）。
+     * <p>
+     * 规则：把全部章节的课时按章节顺序、课时顺序摊平成一条线，
+     * 第一个恒解锁，之后每个都要求前一个已学完。
+     * <b>跨章节也连续</b>——第一章最后一课时没学完，第二章第一课时同样锁着，
+     * 否则员工跳到下一章就能绕过，闯关形同虚设。
+     * <p>
+     * 未登录时没有任何进度，只解锁第一个课时，让人能看到课程长什么样。
+     */
+    private static void markUnlocked(CourseResp courseResp, Map<Long, BigDecimal> progressMap) {
+        if (!Integer.valueOf(1).equals(courseResp.getNeedSequential())) {
+            // 未开启闯关：保持默认的全部解锁
+            return;
+        }
+        boolean prevDone = true;
+        for (CourseChapterResp chapter : courseResp.getChapterRespList()) {
+            if (CollUtil.isEmpty(chapter.getPeriodRespList())) {
+                continue;
+            }
+            for (CourseChapterPeriodResp period : chapter.getPeriodRespList()) {
+                period.setUnlocked(prevDone);
+                if (!prevDone) {
+                    period.setLockedReason("请先完成上一课时");
+                }
+                BigDecimal p = progressMap.get(period.getId());
+                prevDone = p != null && p.compareTo(COMPLETE) >= 0;
+            }
+        }
     }
 
     public Result<Page<CourseCommentResp>> comment(CourseCommentPageReq req) {

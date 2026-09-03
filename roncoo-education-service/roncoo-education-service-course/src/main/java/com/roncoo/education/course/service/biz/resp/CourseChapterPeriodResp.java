@@ -63,4 +63,16 @@ public class CourseChapterPeriodResp implements Serializable {
 
     @Schema(description = "课时进度")
     private BigDecimal periodProgress = BigDecimal.ZERO;
+
+    /**
+     * 是否已解锁（对应需求里的「闯关」）。
+     * 课程未开启顺序解锁时恒为 true；开启后，前一课时学完才解锁下一个。
+     */
+    private Boolean unlocked = Boolean.TRUE;
+
+    /**
+     * 未解锁的原因，直接展示给员工。
+     * 只写「请先完成上一课时」这类可执行的说明，不回传内部状态码。
+     */
+    private String lockedReason;
 }

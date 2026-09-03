@@ -60,4 +60,19 @@ public class AdminCourseEditReq implements Serializable {
 
     @Schema(description = "拖拽播放")
     private Integer speedDrag;
+
+    @Schema(description = "入职后第几天推送；为空表示不自动推送")
+    private Integer pushDay;
+
+    @Schema(description = "推送范围 1全员 2指定班组")
+    private Integer pushScope;
+
+    @Schema(description = "指定班组时的班组ID，逗号分隔")
+    private String pushTeamIds;
+
+    @Schema(description = "推送后多少天内需完成")
+    private Integer deadlineDays;
+
+    @Schema(description = "是否按顺序解锁课时 0否 1是（闯关）")
+    private Integer needSequential;
 }

@@ -46,6 +46,9 @@ public class AuthArticleBiz extends BaseBiz {
     private final UserAgreementSignMapper agreementSignMapper;
 
     @NotNull
+    private final com.roncoo.education.course.service.biz.SequentialBiz sequentialBiz;
+
+    @NotNull
     private final AssignStatusBiz assignStatusBiz;
 
     /**
@@ -60,6 +63,10 @@ public class AuthArticleBiz extends BaseBiz {
         CourseChapterPeriod period = periodDao.getById(req.getPeriodId());
         if (ObjectUtil.isEmpty(period) || !PeriodTypeEnum.ARTICLE.getCode().equals(period.getPeriodType())) {
             return Result.error("该课时不是图文类型");
+        }
+        // 顺序解锁（闯关）：图文课时的进度也走独立接口，同样要拦
+        if (!sequentialBiz.isUnlocked(userId, req.getPeriodId())) {
+            return Result.error("请先完成上一课时");
         }
 
         UserStudy userStudy = userStudyDao.getByPeriodIdAndUserId(req.getPeriodId(), userId);

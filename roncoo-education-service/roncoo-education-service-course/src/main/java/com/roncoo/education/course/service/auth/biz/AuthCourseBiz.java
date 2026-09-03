@@ -68,6 +68,9 @@ public class AuthCourseBiz extends BaseBiz {
     @NotNull
     private final UserAgreementSignMapper agreementSignMapper;
 
+    @NotNull
+    private final com.roncoo.education.course.service.biz.SequentialBiz sequentialBiz;
+
     /**
      * 本地存储私有文件的签名密钥与有效期，见 application-prod.properties。
      * 开发环境有默认值，生产必须覆盖，否则签名可被伪造。
@@ -96,6 +99,11 @@ public class AuthCourseBiz extends BaseBiz {
         CourseChapterPeriod period = periodDao.getById(req.getPeriodId());
         if (ObjectUtil.isEmpty(period) || period.getStatusId().equals(StatusIdEnum.NO.getCode())) {
             return Result.error("该课时不存在或不可用");
+        }
+        // 顺序解锁（闯关）。前端会把未解锁的课时置灰，但改一下地址栏的 periodId
+        // 就能直接跳到最后一课时，所以这里必须再判一次
+        if (!sequentialBiz.isUnlocked(ThreadContext.userId(), period.getId())) {
+            return Result.error("请先完成上一课时");
         }
         // 图文课时的正文存在课时自身上，不依赖 resource，故资源校验前先分支
         boolean isArticle = PeriodTypeEnum.ARTICLE.getCode().equals(period.getPeriodType());

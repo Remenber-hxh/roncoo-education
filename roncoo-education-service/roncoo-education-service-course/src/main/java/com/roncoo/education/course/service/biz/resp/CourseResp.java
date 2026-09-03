@@ -76,4 +76,7 @@ public class CourseResp implements Serializable {
     @Schema(description = "课程收藏状态")
     private Boolean courseCollect = false;
 
+    /** 是否按顺序解锁课时（需求里的「闯关」）。前端据此决定要不要显示锁标 */
+    private Integer needSequential = 0;
+
 }
