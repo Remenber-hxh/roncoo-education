@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.roncoo.education.common.core.base.Result;
 import com.roncoo.education.common.tools.IdWorker;
+import com.roncoo.education.common.tools.WeComBotUtil;
 import com.roncoo.education.course.dao.CourseDao;
 import com.roncoo.education.course.dao.impl.mapper.StatMapper;
 import com.roncoo.education.course.dao.impl.mapper.UserNoticeMapper;
@@ -15,8 +16,11 @@ import com.roncoo.education.course.service.admin.req.AdminRemindReq;
 import com.roncoo.education.course.service.admin.resp.AdminRemindResp;
 import com.roncoo.education.user.feign.interfaces.IFeignUsers;
 import com.roncoo.education.user.feign.interfaces.vo.UserRosterVO;
+import com.roncoo.education.user.feign.interfaces.vo.UsersVO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -24,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,6 +46,7 @@ import java.util.Set;
  *
  * @author 二开
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AdminRemindBiz {
@@ -67,6 +73,21 @@ public class AdminRemindBiz {
     private final UserNoticeMapper noticeMapper;
     private final CourseDao courseDao;
     private final IFeignUsers feignUsers;
+    private final com.roncoo.education.system.feign.interfaces.IFeignSysConfig feignSysConfig;
+
+    /** 读单个配置项，取不到返回 null */
+    private String config(String key) {
+        try {
+            return feignSysConfig.getByConfigKey(key);
+        } catch (Exception e) {
+            log.warn("读取配置 {} 失败", key, e);
+            return null;
+        }
+    }
+
+    private static String nvl(String s) {
+        return s == null ? "" : s;
+    }
 
     public Result<AdminRemindResp> remind(AdminRemindReq req) {
         boolean all = Boolean.TRUE.equals(req.getAll());
@@ -202,6 +223,9 @@ public class AdminRemindBiz {
 
         if (!batch.isEmpty()) {
             noticeMapper.batchInsert(batch);
+            // 站内消息要员工主动登录才看得见。企微群机器人会直接弹到手机上，
+            // 是目前唯一能主动触达的通道（短信平台没配、也没有可对外访问的地址）
+            pushToWeCom(batch, userMap, courseNames);
         }
         resp.setSent(batch.size());
 
@@ -220,8 +244,62 @@ public class AdminRemindBiz {
         return Result.success(resp);
     }
 
+    /**
+     * 把这批催办推到企业微信群，并 @ 到本人。
+     * <p>
+     * 手机号只用于 @（放进 mentioned_mobile_list，企微据此解析成「@姓名」，
+     * 不会把号码显示出来），正文里只出现姓名、班组和课程名——
+     * 群里所有人都看得见这条消息，没必要把手机号也摊开。
+     * 也正因如此，手机号没有放进花名册 VO：只在机器人真的开启时，
+     * 才为被催的那几个人单独取一次。
+     * <p>
+     * 整个方法不抛异常：群通知是附加的触达层，站内消息此时已经写成功了，
+     * 不能因为发群消息失败就让整个催办报错。
+     */
+    private void pushToWeCom(List<UserNotice> batch, Map<Long, UserRosterVO> userMap,
+                             Map<Long, String> courseNames) {
+        try {
+            if (!"1".equals(config("wecomBotEnable"))) {
+                return;
+            }
+            String webhook = config("wecomBotWebhook");
+            if (!StringUtils.hasText(webhook)) {
+                return;
+            }
+
+            // 同一个人被催多门课时合并成一行，避免刷屏
+            Map<Long, List<String>> byUser = new LinkedHashMap<>();
+            for (UserNotice n : batch) {
+                byUser.computeIfAbsent(n.getUserId(), k -> new ArrayList<>())
+                        .add(courseNames.getOrDefault(n.getCourseId(), "培训课程"));
+            }
+
+            Map<Long, UsersVO> detail = feignUsers.listByIds(new ArrayList<>(byUser.keySet()));
+            List<String> mobiles = new ArrayList<>();
+            StringBuilder sb = new StringBuilder("【培训催办】以下同事有必修课已逾期，请尽快完成：\n");
+            for (Map.Entry<Long, List<String>> e : byUser.entrySet()) {
+                UserRosterVO u = userMap.get(e.getKey());
+                sb.append("· ").append(u == null ? "" : nvl(u.getNickname()));
+                if (u != null && StringUtils.hasText(u.getTeamName())) {
+                    sb.append("（").append(u.getTeamName()).append("）");
+                }
+                sb.append("：").append(String.join("、", e.getValue())).append('\n');
+
+                UsersVO vo = detail == null ? null : detail.get(e.getKey());
+                if (vo != null && StringUtils.hasText(vo.getMobile())) {
+                    mobiles.add(vo.getMobile());
+                }
+            }
+            sb.append("请登录培训平台完成学习。");
+
+            WeComBotUtil.sendText(webhook, sb.toString(), mobiles);
+        } catch (Exception e) {
+            log.warn("推送企业微信群通知失败，站内消息已发出，不影响催办结果", e);
+        }
+    }
+
     private static String key(Long userId, Long courseId) {
-        return userId + " " + courseId;
+        return userId + "\u0000" + courseId;
     }
 
     private static long toLong(Object o) {

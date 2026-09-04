@@ -65,6 +65,9 @@ SOURCE w4_remove_friend_link.sql;
 SOURCE w5_auto_assign.sql;
 SOURCE w5_schedule_menu.sql;
 
+-- 企业微信群机器人（催办推送到群）
+SOURCE w6_wecom_bot.sql;
+
 -- ============ 三点五、业务基础数据 ============
 -- 六大培训模块的课程分类。课程、题库都要归到这些模块下，属于必装项。
 SOURCE w3_course_category.sql;
